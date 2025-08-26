@@ -9,7 +9,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body,html{height:100%;font-family:sans-serif;display:flex;flex-direction:column;}
 #menuBar{display:flex;align-items:center;padding:5px;background:#080;color:#fff;}
-#menuBar > div{margin-right:10px;cursor:pointer;}
+#menuBar > div{margin-right:8px;cursor:pointer;}
 #menuBar #version{margin-left:5px;font-size:0.9em;color:#aaa;}
 
 /* メイン領域 */
@@ -109,6 +109,21 @@ button[type="btn"]{
   z-index:20;
 }
 #popupDic .word{font-weight:bold;margin-bottom:4px;}
+
+/* プレビュー拡大モード */
+body.preview-only #editorArea,
+body.preview-only #tabBar {
+  display: none;   /* エディタやタブを非表示 */
+}
+body.preview-only #editorContainer {
+  display: none; /* エディタ非表示 */
+}
+
+body.preview-only #previewArea {
+  flex: 1 !important;  /* プレビューを最大化 */
+  width: 100% !important;
+  height: calc(100vh - 40px); /* メニューバーを除いた全画面表示 */
+}
 </style>
 </head>
 <body>
@@ -120,6 +135,7 @@ button[type="btn"]{
   <div class="dicBtn" data-type="html">HTML辞書</div>
   <div class="dicBtn" data-type="css">CSS辞書</div>
   <div class="dicBtn" data-type="js">JS辞書</div>
+  <div id="expandPreviewBtn">❏</div> <!-- 追加 -->
 </div>
 
 <div id="mainContent">
@@ -406,7 +422,12 @@ importFilesInput.onchange=()=>{
   reader.readAsText(file);
 };
 </script>
-
+<script>
+// プレビュー拡大ボタンの処理
+document.getElementById("expandPreviewBtn").addEventListener("click", function () {
+  document.body.classList.toggle("preview-only");
+});
+</script>
 <!---辞書はここ--->
 
 <script type="application/json" id="html-dic">[{"category": "構造", "word": "<!DOCTYPE html>", "desc": "HTML文書の宣言"}, {"category": "構造", "word": "<html>", "desc": "HTML文書全体を囲むルート要素"}, {"category": "構造", "word": "<head>", "desc": "メタ情報やタイトルを含む要素"}, {"category": "構造", "word": "<body>", "desc": "本文全体を囲む要素"}, {"category": "構造", "word": "<header>", "desc": "ページやセクションのヘッダー部分"}, {"category": "構造", "word": "<footer>", "desc": "ページやセクションのフッター部分"}, {"category": "構造", "word": "<main>", "desc": "主要なコンテンツ部分"}, {"category": "構造", "word": "<section>", "desc": "文書のセクション"}, {"category": "構造", "word": "<article>", "desc": "独立した記事やコンテンツ"}, {"category": "構造", "word": "<nav>", "desc": "ナビゲーションリンク群"}, {"category": "構造", "word": "<aside>", "desc": "補足的なコンテンツ"}, {"category": "構造", "word": "<div>", "desc": "汎用的なコンテナ"}, {"category": "構造", "word": "<span>", "desc": "汎用的なインライン要素"}, {"category": "テキスト", "word": "<h1>", "desc": "最上位の見出し"}, {"category": "テキスト", "word": "<h2>", "desc": "2番目の見出し"}, {"category": "テキスト", "word": "<h3>", "desc": "3番目の見出し"}, {"category": "テキスト", "word": "<h4>", "desc": "4番目の見出し"}, {"category": "テキスト", "word": "<h5>", "desc": "5番目の見出し"}, {"category": "テキスト", "word": "<h6>", "desc": "6番目の見出し"}, {"category": "テキスト", "word": "<p>", "desc": "段落"}, {"category": "テキスト", "word": "<br>", "desc": "改行"}, {"category": "テキスト", "word": "<hr>", "desc": "水平線"}, {"category": "テキスト", "word": "<strong>", "desc": "強調（重要）"}, {"category": "テキスト", "word": "<em>", "desc": "強調（強意）"}, {"category": "テキスト", "word": "<mark>", "desc": "マーカーで強調"}, {"category": "テキスト", "word": "<small>", "desc": "小さい文字"}, {"category": "テキスト", "word": "<b>", "desc": "太字"}, {"category": "テキスト", "word": "<i>", "desc": "斜体"}, {"category": "テキスト", "word": "<u>", "desc": "下線"}, {"category": "テキスト", "word": "<s>", "desc": "打ち消し線"}, {"category": "テキスト", "word": "<sup>", "desc": "上付き文字"}, {"category": "テキスト", "word": "<sub>", "desc": "下付き文字"}, {"category": "テキスト", "word": "<abbr>", "desc": "略語"}, {"category": "テキスト", "word": "<cite>", "desc": "引用元のタイトル"}, {"category": "テキスト", "word": "<q>", "desc": "短い引用"}, {"category": "テキスト", "word": "<blockquote>", "desc": "長い引用"}, {"category": "テキスト", "word": "<code>", "desc": "コード片"}, {"category": "テキスト", "word": "<pre>", "desc": "整形済みテキスト"}, {"category": "テキスト", "word": "<kbd>", "desc": "キーボード入力"}, {"category": "テキスト", "word": "<var>", "desc": "変数"}, {"category": "テキスト", "word": "<samp>", "desc": "出力サンプル"}, {"category": "リンク・埋め込み", "word": "<a>", "desc": "リンク"}, {"category": "リンク・埋め込み", "word": "<link>", "desc": "外部リソース参照"}, {"category": "リンク・埋め込み", "word": "<meta>", "desc": "メタ情報"}, {"category": "リンク・埋め込み", "word": "<base>", "desc": "基準URL指定"}, {"category": "リンク・埋め込み", "word": "<style>", "desc": "CSS記述"}, {"category": "リンク・埋め込み", "word": "<script>", "desc": "JavaScript記述"}, {"category": "リンク・埋め込み", "word": "<noscript>", "desc": "スクリプト無効時の代替"}, {"category": "リンク・埋め込み", "word": "<iframe>", "desc": "インラインフレーム"}, {"category": "リンク・埋め込み", "word": "<embed>", "desc": "外部アプリ埋め込み"}, {"category": "リンク・埋め込み", "word": "<object>", "desc": "外部リソース埋め込み"}, {"category": "リンク・埋め込み", "word": "<param>", "desc": "object用のパラメータ"}, {"category": "リスト", "word": "<ul>", "desc": "順序なしリスト"}, {"category": "リスト", "word": "<ol>", "desc": "順序付きリスト"}, {"category": "リスト", "word": "<li>", "desc": "リスト項目"}, {"category": "リスト", "word": "<dl>", "desc": "定義リスト"}, {"category": "リスト", "word": "<dt>", "desc": "定義語"}, {"category": "リスト", "word": "<dd>", "desc": "定義の説明"}, {"category": "テーブル", "word": "<table>", "desc": "表全体"}, {"category": "テーブル", "word": "<caption>", "desc": "表のタイトル"}, {"category": "テーブル", "word": "<tr>", "desc": "行"}, {"category": "テーブル", "word": "<th>", "desc": "見出しセル"}, {"category": "テーブル", "word": "<td>", "desc": "データセル"}, {"category": "テーブル", "word": "<thead>", "desc": "表のヘッダー部分"}, {"category": "テーブル", "word": "<tbody>", "desc": "表の本文部分"}, {"category": "テーブル", "word": "<tfoot>", "desc": "表のフッター部分"}, {"category": "テーブル", "word": "<colgroup>", "desc": "列のグループ"}, {"category": "テーブル", "word": "<col>", "desc": "列の属性指定"}, {"category": "フォーム", "word": "<form>", "desc": "フォーム全体"}, {"category": "フォーム", "word": "<input>", "desc": "入力フィールド"}, {"category": "フォーム", "word": "<textarea>", "desc": "複数行入力欄"}, {"category": "フォーム", "word": "<button>", "desc": "ボタン"}, {"category": "フォーム", "word": "<select>", "desc": "選択リスト"}, {"category": "フォーム", "word": "<option>", "desc": "選択肢"}, {"category": "フォーム", "word": "<optgroup>", "desc": "選択肢グループ"}, {"category": "フォーム", "word": "<label>", "desc": "ラベル"}, {"category": "フォーム", "word": "<fieldset>", "desc": "入力グループ"}, {"category": "フォーム", "word": "<legend>", "desc": "fieldsetの見出し"}, {"category": "フォーム", "word": "<datalist>", "desc": "入力候補リスト"}, {"category": "フォーム", "word": "<output>", "desc": "計算結果の出力"}, {"category": "フォーム", "word": "<progress>", "desc": "進行状況"}, {"category": "フォーム", "word": "<meter>", "desc": "測定値"}, {"category": "メディア", "word": "<img>", "desc": "画像"}, {"category": "メディア", "word": "<audio>", "desc": "音声"}, {"category": "メディア", "word": "<video>", "desc": "動画"}, {"category": "メディア", "word": "<source>", "desc": "メディアのソース"}, {"category": "メディア", "word": "<track>", "desc": "字幕やキャプション"}, {"category": "メディア", "word": "<canvas>", "desc": "描画領域"}, {"category": "メディア", "word": "<svg>", "desc": "SVGグラフィック"}, {"category": "メディア", "word": "<map>", "desc": "イメージマップ"}, {"category": "メディア", "word": "<area>", "desc": "イメージマップ領域"}, {"category": "メディア", "word": "<picture>", "desc": "レスポンシブ画像"}, {"category": "メディア", "word": "<figcaption>", "desc": "図のキャプション"}, {"category": "メディア", "word": "<figure>", "desc": "図や表のコンテナ"}]</script>
