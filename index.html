@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HTML/CSS/JSエディタ + 辞書 + ファイル入出力</title>
 <style>
-  body { margin: 0; font-family: sans-serif; }
+  body { margin: 0; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; }
   #toolbar { padding: 10px; background: #eee; display: flex; gap: 10px; flex-wrap: wrap; }
   button { padding: 5px 10px; }
-  #editor, #preview { width: 100%; height: 50vh; border: none; padding: 10px; box-sizing: border-box; }
-  #editor { display: block; font-family: monospace; font-size: 16px; }
-  #preview { display: none; background: #fff; }
+  #editor { width: 100%; height: 50vh; font-family: monospace; font-size: 16px; box-sizing: border-box; display: block; }
+  #preview { width: 100%; height: 50vh; border: none; display: none; }
   #dictionary-container { height: 50vh; display: flex; flex-direction: column; border-top: 1px solid #ccc; background: #f9f9f9; }
   #dic-tabs { display: flex; border-bottom: 1px solid #ccc; }
   .dic-tab { padding: 5px 10px; cursor: pointer; }
@@ -58,13 +57,15 @@ const fileInput = document.getElementById('fileInput');
 function showEditor() { 
   editor.style.display = 'block'; 
   preview.style.display = 'none'; 
-  dictionaryContainer.style.display = 'flex'; // 辞書表示
+  dictionaryContainer.style.display = 'flex'; 
+  editor.style.height = '50vh';
 }
 
 function showPreview() {
   editor.style.display = 'none';
   preview.style.display = 'block';
-  dictionaryContainer.style.display = 'none'; // 辞書非表示
+  dictionaryContainer.style.display = 'none'; 
+  preview.style.height = `calc(100vh - ${document.getElementById('toolbar').offsetHeight}px)`;
   preview.contentDocument.body.innerHTML = editor.value;
 }
 
