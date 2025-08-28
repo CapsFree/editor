@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Editor v1.7.2</title>
+<title>My Editor v1.7.3</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -17,7 +17,6 @@ body,html{height:100%;font-family:sans-serif;display:flex;flex-direction:column;
 #tabBar{display:flex;overflow-x:auto;padding:5px;background:#8a8;color:#fff;margin-bottom:5px;}
 #tabBar div{padding:5px 10px;border-radius:8px;margin-right:5px;cursor:pointer;background:#464;color:#fff;}
 #editorWrapper{flex:1;display:flex;position:relative;overflow:hidden;}
-#lineNumbers{background:#f0f0f0;padding:5px;user-select:none;text-align:right;border-right:1px solid #ccc;font-family:monospace;font-size:14px;color:#555;white-space:pre;line-height:1.5;}
 #editor{flex:1;width:100%;height:100%;overflow:auto;font-family:monospace;font-size:14px;padding:5px;outline:none;white-space:pre;line-height:1.5;overflow-wrap:normal;}
 #editor div{white-space:pre;}
 #previewContainer{flex:1;display:flex;flex-direction:column;position:relative;}
@@ -37,7 +36,7 @@ body.preview-only #previewContainer{flex:1;width:100%;height:100vh;}
 <body>
 
 <div id="menuBar">
-  <div id="title">My Editor <span id="version">v1.7.2</span></div>
+  <div id="title">My Editor <span id="version">v1.7.3</span></div>
   <div id="fileMenuBtn">ファイル</div>
   <div class="dicBtn" data-type="html">HTML辞書</div>
   <div class="dicBtn" data-type="css">CSS辞書</div>
@@ -49,7 +48,6 @@ body.preview-only #previewContainer{flex:1;width:100%;height:100vh;}
   <div id="editorContainer">
     <div id="tabBar"></div>
     <div id="editorWrapper">
-      <div id="lineNumbers"></div>
       <div id="editor" contenteditable="true" spellcheck="false"></div>
     </div>
   </div>
@@ -75,9 +73,7 @@ body.preview-only #previewContainer{flex:1;width:100%;height:100vh;}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
-// ---------------- 初期設定 ----------------
 const editor=document.getElementById('editor');
-const lineNumbers=document.getElementById('lineNumbers');
 const preview=document.getElementById('preview');
 const dicContainer=document.getElementById('dicContainer');
 const fileModal=document.getElementById('fileModal');
@@ -88,7 +84,7 @@ let activeFile=0;
 let cursorIndex=0;
 let previewTimeout=null;
 
-// ---------------- タブバー ----------------
+// タブバー
 function updateTabs(){
   const tabBar=document.getElementById('tabBar');
   tabBar.innerHTML='';
@@ -107,15 +103,7 @@ function updateTabs(){
   });
 }
 
-// ---------------- 行番号 ----------------
-function updateLineNumbers(){
-  const lines=editor.innerText.split("\n").length;
-  let html="";
-  for(let i=1;i<=lines;i++) html+=i+"<br>";
-  lineNumbers.innerHTML=html;
-}
-
-// ---------------- カーソル管理 ----------------
+// カーソル管理
 function saveCursorIndex(){
   const sel=window.getSelection();
   if(!sel.rangeCount) return;
@@ -131,7 +119,6 @@ function saveCursorIndex(){
   }
   cursorIndex=editor.innerText.length;
 }
-
 function restoreCursor(){
   editor.focus();
   const sel=window.getSelection();
@@ -157,7 +144,7 @@ function restoreCursor(){
   }
 }
 
-// ---------------- エディタレンダリング ----------------
+// エディタレンダリング
 function renderEditor(){
   editor.innerHTML='';
   const content=files[activeFile].content;
@@ -167,18 +154,16 @@ function renderEditor(){
     editor.appendChild(div);
   });
   restoreCursor();
-  updateLineNumbers();
   schedulePreviewUpdate();
 }
 
-// ---------------- エディタ更新 ----------------
+// エディタ更新
 function updateContentFromEditor(){
   files[activeFile].content=Array.from(editor.childNodes).map(n=>n.innerText).join("\n");
-  updateLineNumbers();
   schedulePreviewUpdate();
 }
 
-// ---------------- Enterキーでインデント保持 ----------------
+// Enterでインデント保持
 editor.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     e.preventDefault();
@@ -199,15 +184,13 @@ editor.addEventListener('keydown',e=>{
     sel.removeAllRanges();
     sel.addRange(newRange);
     updateContentFromEditor();
-    updateLineNumbers();
   }
 });
-
 editor.addEventListener('input',updateContentFromEditor);
 editor.addEventListener('keyup',saveCursorIndex);
 editor.addEventListener('click',saveCursorIndex);
 
-// ---------------- テキスト挿入 ----------------
+// テキスト挿入
 function insertText(text){
   editor.focus();
   restoreCursor();
@@ -224,7 +207,7 @@ function insertText(text){
   updateContentFromEditor();
 }
 
-// ---------------- プレビュー更新（1.5秒遅延） ----------------
+// プレビュー更新（1.5秒遅延）
 function schedulePreviewUpdate(){
   if(previewTimeout) clearTimeout(previewTimeout);
   previewTimeout=setTimeout(updatePreview,1500);
@@ -234,7 +217,7 @@ function updatePreview(){
   preview.src=URL.createObjectURL(blob);
 }
 
-// ---------------- 辞書機能 ----------------
+// 辞書機能
 function escapeHTML(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function loadDictionary(type){
   if(dicContainer.style.display==='block'){dicContainer.style.display='none';return;}
@@ -271,15 +254,14 @@ function loadDictionary(type){
 }
 document.querySelectorAll('.dicBtn').forEach(btn=>{btn.onclick=()=>loadDictionary(btn.dataset.type);});
 
-// ---------------- プレビュー拡大 ----------------
+// プレビュー拡大
 document.getElementById('expandPreviewBtn').addEventListener('click',()=>{
   document.body.classList.toggle('preview-only');
 });
 
-// ---------------- ファイル管理 ----------------
+// ファイル管理
 document.getElementById('fileMenuBtn').onclick=()=>{fileModal.style.display=(fileModal.style.display==='block')?'none':'block';};
 document.getElementById('closeFileModal').onclick=()=>fileModal.style.display='none';
-
 document.getElementById('addFileBtn').onclick=()=>{
   const name=prompt("新しいファイル名を入力","untitled.txt");
   if(name){files.push({name:name,content:"",type:"text"});activeFile=files.length-1;renderEditor();updateTabs();}
@@ -321,7 +303,7 @@ importFilesInput.onchange=()=>{
   });
 };
 
-// ---------------- 初期表示 ----------------
+// 初期表示
 updateTabs();
 renderEditor();
 </script>
