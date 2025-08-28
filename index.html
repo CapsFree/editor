@@ -3,16 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTMLエディタ + 辞書</title>
+<title>HTMLエディタ + 折りたたみ辞書 + プレビュー</title>
 <style>
-  body { margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
-  #toolbar { padding: 10px; background: #eee; display: flex; gap: 10px; flex-wrap: wrap; }
-  button { padding: 5px 10px; }
-  #container { flex: 1; display: flex; flex-direction: column; transition: all 0.3s; }
-  #editor { flex: 1; padding: 10px; font-family: monospace; font-size: 16px; box-sizing: border-box; }
-  #dictionary { flex: 1; border-top: 1px solid #ccc; overflow-y: auto; padding: 10px; }
-  #preview { width: 100%; height: 100vh; border: none; display: none; }
-  .dic-category { margin-bottom: 10px; }
+body { margin:0; font-family:sans-serif; display:flex; flex-direction:column; height:100vh; }
+#toolbar { padding:10px; background:#eee; display:flex; gap:10px; flex-wrap:wrap; }
+button { padding:5px 10px; }
+#container { flex:1; display:flex; flex-direction:column; transition:all 0.3s; min-height:0; }
+#editor { flex:1; padding:10px; font-family:monospace; font-size:16px; box-sizing:border-box; min-height:0; }
+#dictionary { flex:1; border-top:1px solid #ccc; overflow-y:auto; padding:10px; white-space: pre; font-family: monospace; min-height:0; }
+#dictionary .category { font-weight:bold; cursor:pointer; margin-top:10px; font-size:20; line-height:30px; }
+#dictionary .items { margin-left:10px; display:none; font-size:16; line-height:26px; } /* 初期は閉じる */
+#preview { width:100%; height:100vh; border:none; display:none; }
 </style>
 </head>
 <body>
@@ -31,10 +32,6 @@
 
 <iframe id="preview"></iframe>
 
-<script type="application/json" id="html-dic">[]</script>
-<script type="application/json" id="css-dic">[]</script>
-<script type="application/json" id="js-dic">[]</script>
-
 <script>
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
@@ -48,6 +45,7 @@ function showEditor() {
   preview.style.display = 'none';
   adjustLayout();
 }
+
 function showPreview() {
   container.style.display = 'none';
   preview.style.display = 'block';
@@ -77,37 +75,57 @@ function downloadFile() {
   URL.revokeObjectURL(url);
 }
 
-// 辞書読み込み（例：空JSON）
+// 辞書読み込み（カテゴリ折りたたみ対応、初期閉じる）
 function loadDictionary() {
   const types = ['html-dic','css-dic','js-dic'];
-  let html = '';
-  types.forEach(type => {
+  dictionary.innerHTML = '';
+  types.forEach(type=>{
     const dataEl = document.getElementById(type);
-    if (dataEl && dataEl.textContent.trim()) {
+    if(dataEl && dataEl.textContent.trim()){
       try {
         const items = JSON.parse(dataEl.textContent);
-        html += `<h3>${type.replace('-dic','').toUpperCase()}</h3>`;
-        items.forEach(item=>{
-          html += `<div class="dic-category"><strong>${item.word}</strong> - ${item.desc}</div>`;
+        const categories = {};
+        items.forEach(item => {
+          if(!categories[item.category]) categories[item.category] = [];
+          categories[item.category].push(item);
         });
-      } catch(e){ console.error('JSON error', type); }
+        for(const cat in categories){
+          const categoryDiv = document.createElement('div');
+          categoryDiv.className = 'category';
+          categoryDiv.textContent = `${type.replace('-dic','').toUpperCase()} - ${cat}`;
+          
+          const itemsDiv = document.createElement('div');
+          itemsDiv.className = 'items';
+          categories[cat].forEach(item=>{
+            itemsDiv.textContent += item.word + " - " + item.desc + "\n";
+          });
+
+          // 初期は閉じた状態
+          itemsDiv.style.display = 'none';
+
+          categoryDiv.addEventListener('click', ()=>{
+            itemsDiv.style.display = (itemsDiv.style.display === 'none') ? 'block' : 'none';
+          });
+
+          dictionary.appendChild(categoryDiv);
+          dictionary.appendChild(itemsDiv);
+        }
+      } catch(e){ console.error('JSON error', type, e); }
     }
   });
-  dictionary.innerHTML = html;
 }
-loadDictionary();
 
-// レイアウト調整（縦/横）
-function adjustLayout() {
-  if (window.innerWidth > window.innerHeight) {
-    // 横向き
+// レイアウト調整（縦横）
+function adjustLayout(){
+  if(window.innerWidth > window.innerHeight){
+    // 横向き：左エディタ、右辞書
     container.style.flexDirection = 'row';
     editor.style.flex = '1';
     dictionary.style.flex = '1';
     dictionary.style.borderTop = 'none';
     dictionary.style.borderLeft = '1px solid #ccc';
   } else {
-    // 縦向き
+    // 縦向き：上エディタ、下辞書
     container.style.flexDirection = 'column';
     editor.style.flex = '1';
     dictionary.style.flex = '1';
@@ -116,10 +134,12 @@ function adjustLayout() {
   }
 }
 
-// ウィンドウ回転/リサイズで調整
 window.addEventListener('resize', adjustLayout);
 window.addEventListener('orientationchange', adjustLayout);
-
+window.onload = () => {
+  loadDictionary();
+  adjustLayout();
+};
 </script>
 
 <script type="application/json" id="html-dic">[{"category": "構造", "word": "<!DOCTYPE html>", "desc": "HTML文書の宣言"}, {"category": "構造", "word": "<html>", "desc": "HTML文書全体を囲むルート要素"}, {"category": "構造", "word": "<head>", "desc": "メタ情報やタイトルを含む要素"}, {"category": "構造", "word": "<body>", "desc": "本文全体を囲む要素"}, {"category": "構造", "word": "<header>", "desc": "ページやセクションのヘッダー部分"}, {"category": "構造", "word": "<footer>", "desc": "ページやセクションのフッター部分"}, {"category": "構造", "word": "<main>", "desc": "主要なコンテンツ部分"}, {"category": "構造", "word": "<section>", "desc": "文書のセクション"}, {"category": "構造", "word": "<article>", "desc": "独立した記事やコンテンツ"}, {"category": "構造", "word": "<nav>", "desc": "ナビゲーションリンク群"}, {"category": "構造", "word": "<aside>", "desc": "補足的なコンテンツ"}, {"category": "構造", "word": "<div>", "desc": "汎用的なコンテナ"}, {"category": "構造", "word": "<span>", "desc": "汎用的なインライン要素"}, {"category": "テキスト", "word": "<h1>", "desc": "最上位の見出し"}, {"category": "テキスト", "word": "<h2>", "desc": "2番目の見出し"}, {"category": "テキスト", "word": "<h3>", "desc": "3番目の見出し"}, {"category": "テキスト", "word": "<h4>", "desc": "4番目の見出し"}, {"category": "テキスト", "word": "<h5>", "desc": "5番目の見出し"}, {"category": "テキスト", "word": "<h6>", "desc": "6番目の見出し"}, {"category": "テキスト", "word": "<p>", "desc": "段落"}, {"category": "テキスト", "word": "<br>", "desc": "改行"}, {"category": "テキスト", "word": "<hr>", "desc": "水平線"}, {"category": "テキスト", "word": "<strong>", "desc": "強調（重要）"}, {"category": "テキスト", "word": "<em>", "desc": "強調（強意）"}, {"category": "テキスト", "word": "<mark>", "desc": "マーカーで強調"}, {"category": "テキスト", "word": "<small>", "desc": "小さい文字"}, {"category": "テキスト", "word": "<b>", "desc": "太字"}, {"category": "テキスト", "word": "<i>", "desc": "斜体"}, {"category": "テキスト", "word": "<u>", "desc": "下線"}, {"category": "テキスト", "word": "<s>", "desc": "打ち消し線"}, {"category": "テキスト", "word": "<sup>", "desc": "上付き文字"}, {"category": "テキスト", "word": "<sub>", "desc": "下付き文字"}, {"category": "テキスト", "word": "<abbr>", "desc": "略語"}, {"category": "テキスト", "word": "<cite>", "desc": "引用元のタイトル"}, {"category": "テキスト", "word": "<q>", "desc": "短い引用"}, {"category": "テキスト", "word": "<blockquote>", "desc": "長い引用"}, {"category": "テキスト", "word": "<code>", "desc": "コード片"}, {"category": "テキスト", "word": "<pre>", "desc": "整形済みテキスト"}, {"category": "テキスト", "word": "<kbd>", "desc": "キーボード入力"}, {"category": "テキスト", "word": "<var>", "desc": "変数"}, {"category": "テキスト", "word": "<samp>", "desc": "出力サンプル"}, {"category": "リンク・埋め込み", "word": "<a>", "desc": "リンク"}, {"category": "リンク・埋め込み", "word": "<link>", "desc": "外部リソース参照"}, {"category": "リンク・埋め込み", "word": "<meta>", "desc": "メタ情報"}, {"category": "リンク・埋め込み", "word": "<base>", "desc": "基準URL指定"}, {"category": "リンク・埋め込み", "word": "<style>", "desc": "CSS記述"}, {"category": "リンク・埋め込み", "word": "<script>", "desc": "JavaScript記述"}, {"category": "リンク・埋め込み", "word": "<noscript>", "desc": "スクリプト無効時の代替"}, {"category": "リンク・埋め込み", "word": "<iframe>", "desc": "インラインフレーム"}, {"category": "リンク・埋め込み", "word": "<embed>", "desc": "外部アプリ埋め込み"}, {"category": "リンク・埋め込み", "word": "<object>", "desc": "外部リソース埋め込み"}, {"category": "リンク・埋め込み", "word": "<param>", "desc": "object用のパラメータ"}, {"category": "リスト", "word": "<ul>", "desc": "順序なしリスト"}, {"category": "リスト", "word": "<ol>", "desc": "順序付きリスト"}, {"category": "リスト", "word": "<li>", "desc": "リスト項目"}, {"category": "リスト", "word": "<dl>", "desc": "定義リスト"}, {"category": "リスト", "word": "<dt>", "desc": "定義語"}, {"category": "リスト", "word": "<dd>", "desc": "定義の説明"}, {"category": "テーブル", "word": "<table>", "desc": "表全体"}, {"category": "テーブル", "word": "<caption>", "desc": "表のタイトル"}, {"category": "テーブル", "word": "<tr>", "desc": "行"}, {"category": "テーブル", "word": "<th>", "desc": "見出しセル"}, {"category": "テーブル", "word": "<td>", "desc": "データセル"}, {"category": "テーブル", "word": "<thead>", "desc": "表のヘッダー部分"}, {"category": "テーブル", "word": "<tbody>", "desc": "表の本文部分"}, {"category": "テーブル", "word": "<tfoot>", "desc": "表のフッター部分"}, {"category": "テーブル", "word": "<colgroup>", "desc": "列のグループ"}, {"category": "テーブル", "word": "<col>", "desc": "列の属性指定"}, {"category": "フォーム", "word": "<form>", "desc": "フォーム全体"}, {"category": "フォーム", "word": "<input>", "desc": "入力フィールド"}, {"category": "フォーム", "word": "<textarea>", "desc": "複数行入力欄"}, {"category": "フォーム", "word": "<button>", "desc": "ボタン"}, {"category": "フォーム", "word": "<select>", "desc": "選択リスト"}, {"category": "フォーム", "word": "<option>", "desc": "選択肢"}, {"category": "フォーム", "word": "<optgroup>", "desc": "選択肢グループ"}, {"category": "フォーム", "word": "<label>", "desc": "ラベル"}, {"category": "フォーム", "word": "<fieldset>", "desc": "入力グループ"}, {"category": "フォーム", "word": "<legend>", "desc": "fieldsetの見出し"}, {"category": "フォーム", "word": "<datalist>", "desc": "入力候補リスト"}, {"category": "フォーム", "word": "<output>", "desc": "計算結果の出力"}, {"category": "フォーム", "word": "<progress>", "desc": "進行状況"}, {"category": "フォーム", "word": "<meter>", "desc": "測定値"}, {"category": "メディア", "word": "<img>", "desc": "画像"}, {"category": "メディア", "word": "<audio>", "desc": "音声"}, {"category": "メディア", "word": "<video>", "desc": "動画"}, {"category": "メディア", "word": "<source>", "desc": "メディアのソース"}, {"category": "メディア", "word": "<track>", "desc": "字幕やキャプション"}, {"category": "メディア", "word": "<canvas>", "desc": "描画領域"}, {"category": "メディア", "word": "<svg>", "desc": "SVGグラフィック"}, {"category": "メディア", "word": "<map>", "desc": "イメージマップ"}, {"category": "メディア", "word": "<area>", "desc": "イメージマップ領域"}, {"category": "メディア", "word": "<picture>", "desc": "レスポンシブ画像"}, {"category": "メディア", "word": "<figcaption>", "desc": "図のキャプション"}, {"category": "メディア", "word": "<figure>", "desc": "図や表のコンテナ"}]</script>
