@@ -3,139 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Editor v1.5.1</title>
+<title>My Editor v1.7.3</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body,html{height:100%;font-family:sans-serif;display:flex;flex-direction:column;}
-#menuBar{display:flex;align-items:center;padding:5px;background:#080;color:#fff;}
-#menuBar > div{margin-right:8px;cursor:pointer;}
-#menuBar #version{margin-left:5px;font-size:0.9em;color:#aaa;}
-
-/* メイン領域 */
-#mainContent{
-  flex:1;
-  display:flex;
-  flex-direction:column; /* デフォルトは縦並び（縦画面用） */
-  overflow:hidden;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* 横画面の場合は横並び */
-@media(min-width:768px){
-  #mainContent{
-    flex-direction:row;
+body, html {
+  height: 100%;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#menuBar {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  background: #080;
+  color: #fff;
+}
+
+#menuBar > div {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+#menuBar #version {
+  margin-left: 5px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+#mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media(min-width:768px) {
+  #mainContent {
+    flex-direction: row;
   }
 }
 
-#editorContainer, #previewContainer{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  min-height:0;
+#editorContainer, #previewContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
-#tabBar{display:flex;overflow-x:auto;padding:5px;background:#8a8;color:#fff;margin-bottom:5px;}
-#tabBar div{padding:5px 10px;border-radius:8px;margin-right:5px;cursor:pointer;background:#464;color:#fff;}
-
-#editorWrapper{
-  flex:1;
-  display:flex;
-  position:relative;
-  overflow:hidden;
+#tabBar {
+  display: flex;
+  overflow-x: auto;
+  padding: 5px;
+  background: #8a8;
+  color: #fff;
+  margin-bottom: 5px;
 }
 
-#lineNumbers{
-  background:#f0f0f0;
-  padding:5px;
-  user-select:none;
-  text-align:right;
-  border-right:1px solid #ccc;
-  font-family:monospace;
-  font-size:14px;
-  color:#555;
-  white-space:pre;
+#tabBar div {
+  padding: 5px 10px;
+  border-radius: 8px;
+  margin-right: 5px;
+  cursor: pointer;
+  background: #464;
+  color: #fff;
 }
 
-#editor{
-  flex:1;
-  width:100%;
-  height:100%;
-  resize:none;
+#editorWrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  font-family: monospace;
 }
 
-#previewContainer{flex:1;display:flex;flex-direction:column;position:relative;}
-#preview{width:100%;flex:1;border:none;}
-
-#dicContainer{display:none;position:absolute;top:0;left:0;right:0;bottom:0;overflow:auto;background:#f9f9f9;border:1px solid #ccc;padding:10px;}
-#dicContainer .category{margin:5px 0;}
-#dicContainer .category h4{margin:0;padding:5px;background:#ccc;border-radius:5px;cursor:pointer;}
-#dicContainer .block{border:1px solid #aaa;padding:5px;margin:2px 0;cursor:pointer;border-radius:5px;background:#fff;}
-
-/* UIアップデート */
-button[type="btn"]{
-  border:0px;
-  border-radius:8px;
-  padding:4px;
-  margin:4px;
-  background-color:#ffffff;
-  color:#000000;
-  font-size:12px;
-}
-.window{
-  border:0px;
-  border-radius:8px;
-  padding:12px;
-  margin:8px;
-  background-color:#eeeeee;
-  color:#000000;
+#lineNumbers {
+  background: #f0f0f0;
+  padding: 5px;
+  user-select: none;
+  text-align: right;
+  border-right: 1px solid #ccc;
+  font-family: monospace;
+  font-size: 14px;
+  color: #555;
+  white-space: pre;
+  line-height: 1.5;
 }
 
-/* モーダル */
-.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);display:none;z-index:10;}
-
-/* ポップアップ辞書 */
-#popupDic{
-  position:absolute;
-  bottom:10px;
-  left:10px;
-  background:#ffffe0;
-  border:1px solid #aaa;
-  padding:8px;
-  border-radius:8px;
-  font-size:12px;
-  max-width:300px;
-  display:none;
-  z-index:20;
+#editor {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 5px;
+  outline: none;
+  white-space: pre;
+  line-height: 1.5;
+  overflow-wrap: normal;
 }
-#popupDic .word{font-weight:bold;margin-bottom:4px;}
 
-/* プレビュー拡大モード */
-body.preview-only #editorArea,
+#editor div {
+  white-space: pre;
+}
+
+#previewContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+#preview {
+  width: 100%;
+  flex: 1;
+  border: none;
+}
+
+#dicContainer {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+#dicContainer .category {
+  margin: 5px 0;
+}
+
+#dicContainer .category h4 {
+  margin: 0;
+  padding: 5px;
+  background: #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#dicContainer .block {
+  border: 1px solid #aaa;
+  padding: 5px;
+  margin: 2px 0;
+  cursor: pointer;
+  border-radius: 5px;
+  background: #fff;
+}
+
+button[type="btn"] {
+  border: 0;
+  border-radius: 8px;
+  padding: 4px;
+  margin: 4px;
+  background-color: #fff;
+  color: #000;
+  font-size: 12px;
+}
+
+.window {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px;
+  background-color: #eee;
+  color: #000;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  display: none;
+  z-index: 10;
+}
+
+body.preview-only #editorContainer,
 body.preview-only #tabBar {
-  display: none;   /* エディタやタブを非表示 */
-}
-body.preview-only #editorContainer {
-  display: none; /* エディタ非表示 */
+  display: none;
 }
 
-body.preview-only #previewArea {
-  flex: 1 !important;  /* プレビューを最大化 */
-  width: 100% !important;
-  height: calc(100vh - 40px); /* メニューバーを除いた全画面表示 */
+body.preview-only #previewContainer {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 40px);
 }
 </style>
 </head>
 <body>
 
 <div id="menuBar">
-  <div id="title">My Editor <span id="version">v1.5.1</span></div>
+  <div id="title">My Editor <span id="version">v1.7.3</span></div>
   <div id="fileMenuBtn">ファイル</div>
   <div id="settingsBtn">設定</div>
   <div class="dicBtn" data-type="html">HTML辞書</div>
   <div class="dicBtn" data-type="css">CSS辞書</div>
   <div class="dicBtn" data-type="js">JS辞書</div>
-  <div id="expandPreviewBtn">❏</div> <!-- 追加 -->
+  <div id="expandPreviewBtn">❏</div>
 </div>
 
 <div id="mainContent">
@@ -143,13 +221,12 @@ body.preview-only #previewArea {
     <div id="tabBar"></div>
     <div id="editorWrapper">
       <div id="lineNumbers"></div>
-      <textarea id="editor" spellcheck="false"></textarea>
+      <div id="editor" contenteditable="true" spellcheck="false"></div>
     </div>
   </div>
   <div id="previewContainer">
     <iframe id="preview"></iframe>
     <div id="dicContainer"></div>
-    <div id="popupDic"></div>
   </div>
 </div>
 
@@ -174,261 +251,273 @@ body.preview-only #previewArea {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script>
-const editor=document.getElementById('editor');
-const lineNumbers=document.getElementById('lineNumbers');
-const preview=document.getElementById('preview');
-const dicContainer=document.getElementById('dicContainer');
-const popupDic=document.getElementById('popupDic');
-const version="v1.5.1";
-document.title="My Editor "+version;
-document.getElementById("version").textContent=version;
+// --- 基本要素 ---
+const editor = document.getElementById('editor');
+const lineNumbers = document.getElementById('lineNumbers');
+const preview = document.getElementById('preview');
+const dicContainer = document.getElementById('dicContainer');
+const fileModal = document.getElementById('fileModal');
+const settingsModal = document.getElementById('settingsModal');
+const importFilesInput = document.getElementById('importFilesInput');
 
-let files=[{name:"index.html",content:"<h1>Hello World</h1>"}];
-let activeFile=0;
-const PREVIEW_DELAY=2000;
-let previewTimer=null;
-let dicVisible=false;
+let files = [
+  {name: "index.html", content: "<!DOCTYPE html>"},
+];
+let activeFile = 0;
+let cursorIndex = 0;
 
-/* === タブ管理 === */
+// --- タブ管理 ---
 function updateTabs(){
-  const tabBar=document.getElementById('tabBar');
-  tabBar.innerHTML="";
+  const tabBar = document.getElementById('tabBar');
+  tabBar.innerHTML = '';
   files.forEach((f,i)=>{
-    const tab=document.createElement("div");
-    tab.textContent=f.name;
-    tab.style.background=(i===activeFile)?"#080":"#666";
-    tab.onclick=()=>{activeFile=i;editor.value=f.content;updateTabs();updateLineNumbers();}
+    const tab = document.createElement('div');
+    tab.textContent = f.name;
+    tab.style.background = (i===activeFile)?"#080":"#666";
+    tab.onclick = ()=>{
+      saveCursorIndex();
+      updateContentFromEditor(); // 現在の内容を保存
+      activeFile = i;
+      renderEditor();
+      updateTabs();
+    };
     tabBar.appendChild(tab);
   });
 }
-updateTabs();
-editor.value=files[activeFile].content;
-updateLineNumbers();
 
-/* === プレビュー更新 === */
-editor.addEventListener("input",()=>{
-  files[activeFile].content=editor.value;
-  updateLineNumbers();
-  if(previewTimer) clearTimeout(previewTimer);
-  previewTimer=setTimeout(()=>{updatePreview();},PREVIEW_DELAY);
-});
-function updatePreview(){
-  const blob=new Blob([files[0].content],{type:"text/html"});
-  preview.src=URL.createObjectURL(blob);
-}
-updatePreview();
-
-/* === 行番号 === */
+// --- 行番号更新 ---
 function updateLineNumbers(){
-  const lines=editor.value.split("\n").length;
-  lineNumbers.innerHTML=Array.from({length:lines},(_,i)=>i+1).join("\n");
-  
-}
-editor.addEventListener('scroll',()=>{lineNumbers.scrollTop=editor.scrollTop;});
-
-/* === インデント(Tab) === */
-editor.addEventListener('keydown',(e)=>{
-  if(e.key==="Tab"){
-    e.preventDefault();
-    const start=editor.selectionStart,end=editor.selectionEnd;
-    const val=editor.value;
-    editor.value=val.substring(0,start)+"  "+val.substring(end);
-    editor.selectionStart=editor.selectionEnd=start+2;
+  const lines = editor.innerText.split("\n").length;
+  let html = "";
+  for(let i=1; i<=lines; i++){
+    html += i + "<br>";
   }
-});
+  lineNumbers.innerHTML = html;
+}
 
-/* === 自動括弧・タグ閉じ === */
-editor.addEventListener('keydown',(e)=>{
-  const val=editor.value;
-  const start=editor.selectionStart,end=editor.selectionEnd;
+// --- カーソル保存・復元 ---
+function saveCursorIndex(){
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  let preCount = 0;
+  for(const child of editor.childNodes){
+    const len = (child.innerText || "").length + 1;
+    if(child.contains(range.startContainer)){
+      cursorIndex = preCount + range.startOffset;
+      return;
+    }
+    preCount += len;
+  }
+  cursorIndex = editor.innerText.length;
+}
+
+function restoreCursor(){
+  editor.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  const range = document.createRange();
+  let remaining = cursorIndex;
+  for(const child of editor.childNodes){
+    const len = (child.innerText || "").length;
+    if(remaining <= len){
+      const node = child.firstChild || child;
+      range.setStart(node, remaining);
+      range.setEnd(node, remaining);
+      sel.addRange(range);
+      return;
+    } else {
+      remaining -= (len + 1);
+    }
+  }
+  if(editor.lastChild){
+    const node = editor.lastChild.firstChild || editor.lastChild;
+    const len = (node.textContent || "").length;
+    range.setStart(node, len);
+    range.setEnd(node, len);
+    sel.addRange(range);
+  }
+}
+
+// --- エディタ描画 ---
+function renderEditor(){
+  editor.innerHTML = '';
+  const content = files[activeFile].content;
+  content.split("\n").forEach(line=>{
+    const div = document.createElement('div');
+    div.textContent = line || "\u200B";
+    editor.appendChild(div);
+  });
+  restoreCursor();
+  updateLineNumbers();
+  updatePreview();
+}
+
+// --- 入力内容を保存 ---
+function updateContentFromEditor(){
+  files[activeFile].content = Array.from(editor.childNodes).map(n=>n.innerText).join("\n");
+  updateLineNumbers();
+  updatePreview();
+}
+
+// --- 改行・インデントコピー ---
+editor.addEventListener('keydown', e => {
   if(e.key==='Enter'){
     e.preventDefault();
-    const indent=getIndentOfLine(val,start);
-    const before=val.slice(0,start);
-    const after=val.slice(end);
-    const prevChar=before.slice(-1);
-    let tagClose="";
-    const openTagMatch=before.match(/<([A-Za-z][\w:-]*)([^/>])*?>\s*$/);
-    const alreadyClosed=/<\/[A-Za-z][\w:-]*>\s*$/.test(before);
-    const selfClosing=/\/>\s*$/.test(before);
-    if(openTagMatch && !alreadyClosed && !selfClosing){
-      const tag=openTagMatch[1];
-      if(!after.includes(`</${tag}>`)) tagClose=`</${tag}>`;
-    }
-    const pair={'{':'}','(' :')','[':']','<':'>'};
-    let closeChar="";
-    if(pair[prevChar]){
-      const ahead=after.trimStart();
-      if(!ahead.startsWith(pair[prevChar])) closeChar=pair[prevChar];
-    }
-    if(tagClose){
-      const insert=`\n${indent}  \n${indent}${tagClose}`;
-      setValueAndCaret(before+insert+after,before.length+1+indent.length+2);
-      return;
-    }
-    if(closeChar){
-      const insert=`\n${indent}  \n${indent}${closeChar}`;
-      setValueAndCaret(before+insert+after,before.length+1+indent.length+2);
-      return;
-    }
-    const insert=`\n${indent}`;
-    setValueAndCaret(before+insert+after,before.length+insert.length);
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    let container = range.startContainer;
+    while(container && container!==editor && container.nodeName!=='DIV') container = container.parentNode;
+    const lineText = container ? container.innerText : '';
+    const match = lineText.match(/^(\s*)/);
+    const indent = match ? match[1] : '';
+    document.execCommand('insertHTML', false, '\n'+indent);
+    updateContentFromEditor();
   }
 });
-function getIndentOfLine(text,pos){
-  const lineStart=text.lastIndexOf("\n",pos-1)+1;
-  return text.slice(lineStart,pos).match(/^\s*/)[0];
-}
-function setValueAndCaret(val,pos){
-  editor.value=val;
-  editor.selectionStart=editor.selectionEnd=pos;
-  files[activeFile].content=val;
-  updateLineNumbers();
+
+// --- 通常入力の監視 ---
+editor.addEventListener('input', updateContentFromEditor);
+editor.addEventListener('keyup', saveCursorIndex);
+editor.addEventListener('click', saveCursorIndex);
+
+// --- テキスト挿入（辞書などから） ---
+function insertText(text){
+  editor.focus();         // エディタにフォーカスを移す
+  restoreCursor();        // 保存済みカーソル位置に復元
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  const node = document.createTextNode(text);
+  range.insertNode(node);
+  range.setStartAfter(node);
+  range.setEndAfter(node);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  updateContentFromEditor();
 }
 
-/* === ポップアップ辞書 === */
-const WORD_INDEX=new Map();
+// --- プレビュー更新 ---
+function updatePreview(){
+  const blob = new Blob([files[activeFile].content], {type:"text/html"});
+  preview.src = URL.createObjectURL(blob);
+}
+
+// --- 辞書読み込み ---
 function escapeHTML(str){return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-function getCurrentWord(){
-  const pos=editor.selectionStart,txt=editor.value;
-  let l=pos,r=pos,isWord=c=>/[A-Za-z0-9_\-$]/.test(c);
-  while(l>0&&isWord(txt[l-1])) l--;
-  while(r<txt.length&&isWord(txt[r])) r++;
-  return txt.slice(l,r);
-}
-function getPrevWord(){
-  const pos=editor.selectionStart,txt=editor.value;
-  let i=pos-1,isWord=c=>/[A-Za-z0-9_\-$]/.test(c);
-  while(i>=0&&!isWord(txt[i])) i--;
-  if(i<0) return "";
-  let r=i;while(i>=0&&isWord(txt[i])) i--;
-  return txt.slice(i+1,r+1);
-}
-function showPopupForCaret(){
-  let word=getCurrentWord();if(!word) word=getPrevWord();
-  if(WORD_INDEX.size===0||!word){popupDic.style.display='none';return;}
-  const hit=WORD_INDEX.get(word);
-  if(hit){
-    popupDic.innerHTML=`<div class="word">${word}</div><div class="desc">${escapeHTML(hit)}</div>`;
-    popupDic.style.display='block';
-  }else popupDic.style.display='none';
-}
-editor.addEventListener('keyup',showPopupForCaret);
-editor.addEventListener('click',showPopupForCaret);
-
-/* === モーダル === */
-const fileModal=document.getElementById('fileModal');
-const settingsModal=document.getElementById('settingsModal');
-function toggleModal(modal){
-  if(modal.style.display==='block'){modal.style.display='none';}
-  else{fileModal.style.display='none';settingsModal.style.display='none';modal.style.display='block';}
-}
-document.getElementById('fileMenuBtn').onclick=()=>toggleModal(fileModal);
-document.getElementById('settingsBtn').onclick=()=>toggleModal(settingsModal);
-document.getElementById('closeFileModal').onclick=()=>fileModal.style.display='none';
-document.getElementById('closeSettingsModal').onclick=()=>settingsModal.style.display='none';
-
-/* === 辞書 === */
 function loadDictionary(type){
-  if(dicVisible){dicContainer.style.display="none";preview.style.display="block";dicVisible=false;return;}
-  dicContainer.innerHTML="";dicContainer.style.display="block";preview.style.display="none";dicVisible=true;
+  if(dicContainer.style.display === 'block'){ dicContainer.style.display='none'; return; }
+  dicContainer.style.display='block';
+  dicContainer.innerHTML='';
+  const script = document.getElementById(type+'-dic');
+  if(!script){dicContainer.textContent='辞書が見つかりません'; return;}
   try{
-    const rawText=document.getElementById(type+"-dic")?.textContent;
-    const data=JSON.parse(rawText);const categories={};
+    const data = JSON.parse(script.textContent);
+    const categories = {};
     data.forEach(item=>{
       if(!categories[item.category]) categories[item.category]=[];
       categories[item.category].push(item);
-      WORD_INDEX.set(item.word,item.desc);
     });
     for(const cat in categories){
-      const catDiv=document.createElement("div");catDiv.className="category";
-      const h4=document.createElement("h4");h4.textContent=cat;catDiv.appendChild(h4);
-      const listDiv=document.createElement("div");
+      const catDiv = document.createElement('div');
+      catDiv.className='category';
+      const h4 = document.createElement('h4');
+      h4.textContent = cat;
+      const listDiv = document.createElement('div');
       categories[cat].forEach(item=>{
-        const block=document.createElement("div");
-        block.className="block";
-        block.innerHTML=escapeHTML(item.word)+"<br>"+escapeHTML(item.desc);
+        const block = document.createElement('div');
+        block.className='block';
+        block.innerHTML = escapeHTML(item.word)+'<br>'+escapeHTML(item.desc);
         block.onclick=()=>insertText(item.word);
         listDiv.appendChild(block);
       });
-      catDiv.appendChild(listDiv);dicContainer.appendChild(catDiv);
-      h4.onclick=()=>{listDiv.style.display=listDiv.style.display==='none'?'block':'none';}
+      catDiv.appendChild(h4);
+      catDiv.appendChild(listDiv);
+      dicContainer.appendChild(catDiv);
+      h4.onclick=()=>{listDiv.style.display=(listDiv.style.display==='none')?'block':'none';}
     }
-  }catch(e){dicContainer.textContent="辞書の読み込みに失敗しました";}
+  }catch(e){dicContainer.textContent='辞書の読み込みに失敗しました';}
 }
-document.querySelectorAll('.dicBtn').forEach(btn=>{btn.onclick=()=>loadDictionary(btn.dataset.type);});
+document.querySelectorAll('.dicBtn').forEach(btn=>{
+  btn.onclick=()=>loadDictionary(btn.dataset.type);
+});
 
-/* === テキスト挿入 === */
-function insertText(text){
-  const start=editor.selectionStart,end=editor.selectionEnd;
-  editor.value=editor.value.slice(0,start)+text+editor.value.slice(end);
-  editor.focus();
-  editor.selectionStart=editor.selectionEnd=start+text.length;
-  files[activeFile].content=editor.value;
-  updateLineNumbers();
-}
+// --- プレビュー拡大 ---
+document.getElementById('expandPreviewBtn').addEventListener('click',()=>{
+  document.body.classList.toggle('preview-only');
+});
 
-/* === ファイルメニュー操作 === */
-const addFileBtn=document.getElementById('addFileBtn');
-const removeFileBtn=document.getElementById('removeFileBtn');
-const renameFileBtn=document.getElementById('renameFileBtn');
-const exportFilesBtn=document.getElementById('exportFilesBtn');
-const importFilesBtn=document.getElementById('importFilesBtn');
-const importFilesInput=document.getElementById('importFilesInput');
-
-addFileBtn.onclick=()=>{
-  const name=prompt("新しいファイル名を入力してください","");
-  if(name){files.push({name:name,content:""});activeFile=files.length-1;updateTabs();editor.value="";updateLineNumbers();}
+// --- ファイルメニュー・設定モーダル ---
+document.getElementById('fileMenuBtn').onclick = () => {
+  fileModal.style.display = (fileModal.style.display==='block')?'none':'block';
+  settingsModal.style.display = 'none';
 };
+document.getElementById('settingsBtn').onclick = () => {
+  settingsModal.style.display = (settingsModal.style.display==='block')?'none':'block';
+  fileModal.style.display = 'none';
+};
+document.getElementById('closeFileModal').onclick = () => fileModal.style.display='none';
+document.getElementById('closeSettingsModal').onclick = () => settingsModal.style.display='none';
 
-removeFileBtn.onclick=()=>{
+// --- ファイル操作 ---
+document.getElementById('addFileBtn').onclick = () => {
+  const name = prompt("新しいファイル名を入力","untitled.txt");
+  if(name){
+    files.push({name:name, content:""});
+    activeFile = files.length-1;
+    renderEditor();
+    updateTabs();
+  }
+};
+document.getElementById('removeFileBtn').onclick = () => {
   if(files.length===0) return;
   if(confirm("ファイル '"+files[activeFile].name+"' を削除しますか？")){
     files.splice(activeFile,1);
-    activeFile=Math.max(0,activeFile-1);
-    editor.value=files[activeFile]?files[activeFile].content:"";
-    updateTabs();updateLineNumbers();
+    activeFile = Math.max(0, activeFile-1);
+    renderEditor();
+    updateTabs();
   }
 };
-
-renameFileBtn.onclick=()=>{
+document.getElementById('renameFileBtn').onclick = () => {
   if(files.length===0) return;
-  const newName=prompt("ファイル名を変更してください",files[activeFile].name);
-  if(newName){files[activeFile].name=newName;updateTabs();}
+  const newName = prompt("新しい名前を入力", files[activeFile].name);
+  if(newName){
+    files[activeFile].name = newName;
+    updateTabs();
+  }
 };
-
-exportFilesBtn.onclick=()=>{
-  const blob=new Blob([JSON.stringify(files)],{type:"application/json"});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download="files.json";
+document.getElementById('exportFilesBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(files)], {type:"application/json"});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "files.json";
   a.click();
 };
-
-importFilesBtn.onclick=()=>importFilesInput.click();
-importFilesInput.onchange=()=>{ 
-  const file=importFilesInput.files[0];
+document.getElementById('importFilesBtn').onclick = () => importFilesInput.click();
+importFilesInput.onchange = () => {
+  const file = importFilesInput.files[0];
   if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
+  const reader = new FileReader();
+  reader.onload = e => {
     try{
-      const imported=JSON.parse(e.target.result);
-      if(Array.isArray(imported)) files=imported;
-      activeFile=0;
-      editor.value=files[0]?.content||"";
-      updateTabs();updateLineNumbers();
-    }catch(err){alert("ファイル読み込みに失敗しました");}
+      const imported = JSON.parse(e.target.result);
+      if(Array.isArray(imported)) files = imported;
+      activeFile = 0;
+      renderEditor();
+      updateTabs();
+    }catch(err){
+      alert("ファイル読み込みに失敗しました");
+    }
   };
   reader.readAsText(file);
 };
+
+// --- 初期化 ---
+updateTabs();
+renderEditor();
 </script>
-<script>
-// プレビュー拡大ボタンの処理
-document.getElementById("expandPreviewBtn").addEventListener("click", function () {
-  document.body.classList.toggle("preview-only");
-});
-</script>
-<!---辞書はここ--->
 
 <script type="application/json" id="html-dic">[{"category": "構造", "word": "<!DOCTYPE html>", "desc": "HTML文書の宣言"}, {"category": "構造", "word": "<html>", "desc": "HTML文書全体を囲むルート要素"}, {"category": "構造", "word": "<head>", "desc": "メタ情報やタイトルを含む要素"}, {"category": "構造", "word": "<body>", "desc": "本文全体を囲む要素"}, {"category": "構造", "word": "<header>", "desc": "ページやセクションのヘッダー部分"}, {"category": "構造", "word": "<footer>", "desc": "ページやセクションのフッター部分"}, {"category": "構造", "word": "<main>", "desc": "主要なコンテンツ部分"}, {"category": "構造", "word": "<section>", "desc": "文書のセクション"}, {"category": "構造", "word": "<article>", "desc": "独立した記事やコンテンツ"}, {"category": "構造", "word": "<nav>", "desc": "ナビゲーションリンク群"}, {"category": "構造", "word": "<aside>", "desc": "補足的なコンテンツ"}, {"category": "構造", "word": "<div>", "desc": "汎用的なコンテナ"}, {"category": "構造", "word": "<span>", "desc": "汎用的なインライン要素"}, {"category": "テキスト", "word": "<h1>", "desc": "最上位の見出し"}, {"category": "テキスト", "word": "<h2>", "desc": "2番目の見出し"}, {"category": "テキスト", "word": "<h3>", "desc": "3番目の見出し"}, {"category": "テキスト", "word": "<h4>", "desc": "4番目の見出し"}, {"category": "テキスト", "word": "<h5>", "desc": "5番目の見出し"}, {"category": "テキスト", "word": "<h6>", "desc": "6番目の見出し"}, {"category": "テキスト", "word": "<p>", "desc": "段落"}, {"category": "テキスト", "word": "<br>", "desc": "改行"}, {"category": "テキスト", "word": "<hr>", "desc": "水平線"}, {"category": "テキスト", "word": "<strong>", "desc": "強調（重要）"}, {"category": "テキスト", "word": "<em>", "desc": "強調（強意）"}, {"category": "テキスト", "word": "<mark>", "desc": "マーカーで強調"}, {"category": "テキスト", "word": "<small>", "desc": "小さい文字"}, {"category": "テキスト", "word": "<b>", "desc": "太字"}, {"category": "テキスト", "word": "<i>", "desc": "斜体"}, {"category": "テキスト", "word": "<u>", "desc": "下線"}, {"category": "テキスト", "word": "<s>", "desc": "打ち消し線"}, {"category": "テキスト", "word": "<sup>", "desc": "上付き文字"}, {"category": "テキスト", "word": "<sub>", "desc": "下付き文字"}, {"category": "テキスト", "word": "<abbr>", "desc": "略語"}, {"category": "テキスト", "word": "<cite>", "desc": "引用元のタイトル"}, {"category": "テキスト", "word": "<q>", "desc": "短い引用"}, {"category": "テキスト", "word": "<blockquote>", "desc": "長い引用"}, {"category": "テキスト", "word": "<code>", "desc": "コード片"}, {"category": "テキスト", "word": "<pre>", "desc": "整形済みテキスト"}, {"category": "テキスト", "word": "<kbd>", "desc": "キーボード入力"}, {"category": "テキスト", "word": "<var>", "desc": "変数"}, {"category": "テキスト", "word": "<samp>", "desc": "出力サンプル"}, {"category": "リンク・埋め込み", "word": "<a>", "desc": "リンク"}, {"category": "リンク・埋め込み", "word": "<link>", "desc": "外部リソース参照"}, {"category": "リンク・埋め込み", "word": "<meta>", "desc": "メタ情報"}, {"category": "リンク・埋め込み", "word": "<base>", "desc": "基準URL指定"}, {"category": "リンク・埋め込み", "word": "<style>", "desc": "CSS記述"}, {"category": "リンク・埋め込み", "word": "<script>", "desc": "JavaScript記述"}, {"category": "リンク・埋め込み", "word": "<noscript>", "desc": "スクリプト無効時の代替"}, {"category": "リンク・埋め込み", "word": "<iframe>", "desc": "インラインフレーム"}, {"category": "リンク・埋め込み", "word": "<embed>", "desc": "外部アプリ埋め込み"}, {"category": "リンク・埋め込み", "word": "<object>", "desc": "外部リソース埋め込み"}, {"category": "リンク・埋め込み", "word": "<param>", "desc": "object用のパラメータ"}, {"category": "リスト", "word": "<ul>", "desc": "順序なしリスト"}, {"category": "リスト", "word": "<ol>", "desc": "順序付きリスト"}, {"category": "リスト", "word": "<li>", "desc": "リスト項目"}, {"category": "リスト", "word": "<dl>", "desc": "定義リスト"}, {"category": "リスト", "word": "<dt>", "desc": "定義語"}, {"category": "リスト", "word": "<dd>", "desc": "定義の説明"}, {"category": "テーブル", "word": "<table>", "desc": "表全体"}, {"category": "テーブル", "word": "<caption>", "desc": "表のタイトル"}, {"category": "テーブル", "word": "<tr>", "desc": "行"}, {"category": "テーブル", "word": "<th>", "desc": "見出しセル"}, {"category": "テーブル", "word": "<td>", "desc": "データセル"}, {"category": "テーブル", "word": "<thead>", "desc": "表のヘッダー部分"}, {"category": "テーブル", "word": "<tbody>", "desc": "表の本文部分"}, {"category": "テーブル", "word": "<tfoot>", "desc": "表のフッター部分"}, {"category": "テーブル", "word": "<colgroup>", "desc": "列のグループ"}, {"category": "テーブル", "word": "<col>", "desc": "列の属性指定"}, {"category": "フォーム", "word": "<form>", "desc": "フォーム全体"}, {"category": "フォーム", "word": "<input>", "desc": "入力フィールド"}, {"category": "フォーム", "word": "<textarea>", "desc": "複数行入力欄"}, {"category": "フォーム", "word": "<button>", "desc": "ボタン"}, {"category": "フォーム", "word": "<select>", "desc": "選択リスト"}, {"category": "フォーム", "word": "<option>", "desc": "選択肢"}, {"category": "フォーム", "word": "<optgroup>", "desc": "選択肢グループ"}, {"category": "フォーム", "word": "<label>", "desc": "ラベル"}, {"category": "フォーム", "word": "<fieldset>", "desc": "入力グループ"}, {"category": "フォーム", "word": "<legend>", "desc": "fieldsetの見出し"}, {"category": "フォーム", "word": "<datalist>", "desc": "入力候補リスト"}, {"category": "フォーム", "word": "<output>", "desc": "計算結果の出力"}, {"category": "フォーム", "word": "<progress>", "desc": "進行状況"}, {"category": "フォーム", "word": "<meter>", "desc": "測定値"}, {"category": "メディア", "word": "<img>", "desc": "画像"}, {"category": "メディア", "word": "<audio>", "desc": "音声"}, {"category": "メディア", "word": "<video>", "desc": "動画"}, {"category": "メディア", "word": "<source>", "desc": "メディアのソース"}, {"category": "メディア", "word": "<track>", "desc": "字幕やキャプション"}, {"category": "メディア", "word": "<canvas>", "desc": "描画領域"}, {"category": "メディア", "word": "<svg>", "desc": "SVGグラフィック"}, {"category": "メディア", "word": "<map>", "desc": "イメージマップ"}, {"category": "メディア", "word": "<area>", "desc": "イメージマップ領域"}, {"category": "メディア", "word": "<picture>", "desc": "レスポンシブ画像"}, {"category": "メディア", "word": "<figcaption>", "desc": "図のキャプション"}, {"category": "メディア", "word": "<figure>", "desc": "図や表のコンテナ"}]</script>
 <script type="application/json" id="css-dic">[{"category": "レイアウト", "word": "display", "desc": "要素の表示形式を指定"}, {"category": "レイアウト", "word": "position", "desc": "要素の配置方法を指定"}, {"category": "レイアウト", "word": "top", "desc": "上からの位置"}, {"category": "レイアウト", "word": "right", "desc": "右からの位置"}, {"category": "レイアウト", "word": "bottom", "desc": "下からの位置"}, {"category": "レイアウト", "word": "left", "desc": "左からの位置"}, {"category": "レイアウト", "word": "z-index", "desc": "重なり順"}, {"category": "レイアウト", "word": "float", "desc": "要素を左右に寄せる"}, {"category": "レイアウト", "word": "clear", "desc": "floatの解除"}, {"category": "レイアウト", "word": "overflow", "desc": "はみ出した内容の処理"}, {"category": "レイアウト", "word": "clip", "desc": "表示領域を切り取る"}, {"category": "レイアウト", "word": "visibility", "desc": "要素の表示/非表示"}, {"category": "レイアウト", "word": "opacity", "desc": "透明度"}, {"category": "寸法", "word": "width", "desc": "幅"}, {"category": "寸法", "word": "min-width", "desc": "最小幅"}, {"category": "寸法", "word": "max-width", "desc": "最大幅"}, {"category": "寸法", "word": "height", "desc": "高さ"}, {"category": "寸法", "word": "min-height", "desc": "最小高さ"}, {"category": "寸法", "word": "max-height", "desc": "最大高さ"}, {"category": "余白", "word": "margin", "desc": "外側の余白"}, {"category": "余白", "word": "margin-top", "desc": "上の余白"}, {"category": "余白", "word": "margin-right", "desc": "右の余白"}, {"category": "余白", "word": "margin-bottom", "desc": "下の余白"}, {"category": "余白", "word": "margin-left", "desc": "左の余白"}, {"category": "余白", "word": "padding", "desc": "内側の余白"}, {"category": "余白", "word": "padding-top", "desc": "上の内側余白"}, {"category": "余白", "word": "padding-right", "desc": "右の内側余白"}, {"category": "余白", "word": "padding-bottom", "desc": "下の内側余白"}, {"category": "余白", "word": "padding-left", "desc": "左の内側余白"}, {"category": "枠線", "word": "border", "desc": "枠線一括指定"}, {"category": "枠線", "word": "border-width", "desc": "枠線の太さ"}, {"category": "枠線", "word": "border-style", "desc": "枠線のスタイル"}, {"category": "枠線", "word": "border-color", "desc": "枠線の色"}, {"category": "枠線", "word": "border-radius", "desc": "角丸"}, {"category": "枠線", "word": "border-top", "desc": "上の枠線"}, {"category": "枠線", "word": "border-right", "desc": "右の枠線"}, {"category": "枠線", "word": "border-bottom", "desc": "下の枠線"}, {"category": "枠線", "word": "border-left", "desc": "左の枠線"}, {"category": "枠線", "word": "outline", "desc": "アウトライン"}, {"category": "枠線", "word": "box-shadow", "desc": "影の効果"}, {"category": "背景", "word": "background", "desc": "背景一括指定"}, {"category": "背景", "word": "background-color", "desc": "背景色"}, {"category": "背景", "word": "background-image", "desc": "背景画像"}, {"category": "背景", "word": "background-size", "desc": "背景画像のサイズ"}, {"category": "背景", "word": "background-position", "desc": "背景画像の位置"}, {"category": "背景", "word": "background-repeat", "desc": "背景画像の繰り返し"}, {"category": "背景", "word": "background-clip", "desc": "背景描画領域"}, {"category": "背景", "word": "background-origin", "desc": "背景の基準位置"}, {"category": "背景", "word": "background-attachment", "desc": "背景画像のスクロール制御"}, {"category": "文字", "word": "color", "desc": "文字色"}, {"category": "文字", "word": "font", "desc": "フォント一括指定"}, {"category": "文字", "word": "font-family", "desc": "フォント種類"}, {"category": "文字", "word": "font-size", "desc": "文字サイズ"}, {"category": "文字", "word": "font-style", "desc": "斜体指定"}, {"category": "文字", "word": "font-weight", "desc": "太字指定"}, {"category": "文字", "word": "line-height", "desc": "行の高さ"}, {"category": "文字", "word": "letter-spacing", "desc": "文字間隔"}, {"category": "文字", "word": "word-spacing", "desc": "単語間隔"}, {"category": "文字", "word": "text-align", "desc": "文字揃え"}, {"category": "文字", "word": "text-decoration", "desc": "下線や取り消し線"}, {"category": "文字", "word": "text-transform", "desc": "大文字・小文字変換"}, {"category": "文字", "word": "white-space", "desc": "空白や改行の扱い"}, {"category": "文字", "word": "vertical-align", "desc": "縦方向の配置"}, {"category": "文字", "word": "text-shadow", "desc": "文字の影"}, {"category": "文字", "word": "direction", "desc": "文字の書字方向"}, {"category": "文字", "word": "unicode-bidi", "desc": "双方向テキスト制御"}, {"category": "リスト", "word": "list-style", "desc": "リストマーカー一括指定"}, {"category": "リスト", "word": "list-style-type", "desc": "リストマーカー種類"}, {"category": "リスト", "word": "list-style-position", "desc": "マーカー位置"}, {"category": "リスト", "word": "list-style-image", "desc": "マーカー画像"}, {"category": "表", "word": "border-collapse", "desc": "セルの枠線結合"}, {"category": "表", "word": "border-spacing", "desc": "セルの間隔"}, {"category": "表", "word": "caption-side", "desc": "キャプション位置"}, {"category": "表", "word": "empty-cells", "desc": "空セルの表示"}, {"category": "アニメーション", "word": "transition", "desc": "変化のアニメーション"}, {"category": "アニメーション", "word": "transition-property", "desc": "アニメ対象プロパティ"}, {"category": "アニメーション", "word": "transition-duration", "desc": "変化の時間"}, {"category": "アニメーション", "word": "transition-timing-function", "desc": "加速・減速"}, {"category": "アニメーション", "word": "transition-delay", "desc": "開始遅延"}, {"category": "アニメーション", "word": "animation", "desc": "アニメーション一括指定"}, {"category": "アニメーション", "word": "animation-name", "desc": "アニメーション名"}, {"category": "アニメーション", "word": "animation-duration", "desc": "アニメ時間"}, {"category": "アニメーション", "word": "animation-delay", "desc": "アニメ開始遅延"}, {"category": "アニメーション", "word": "animation-iteration-count", "desc": "繰り返し回数"}, {"category": "アニメーション", "word": "animation-direction", "desc": "方向（逆再生など）"}, {"category": "アニメーション", "word": "animation-fill-mode", "desc": "終了後の状態"}, {"category": "Flex", "word": "display:flex", "desc": "Flexboxを有効化"}, {"category": "Flex", "word": "flex-direction", "desc": "並び方向"}, {"category": "Flex", "word": "flex-wrap", "desc": "折り返し"}, {"category": "Flex", "word": "flex-flow", "desc": "directionとwrapをまとめて指定"}, {"category": "Flex", "word": "justify-content", "desc": "主軸方向の揃え"}, {"category": "Flex", "word": "align-items", "desc": "交差軸の揃え"}, {"category": "Flex", "word": "align-content", "desc": "複数行の揃え"}, {"category": "Flex", "word": "flex-grow", "desc": "余白を伸ばす割合"}, {"category": "Flex", "word": "flex-shrink", "desc": "縮小の割合"}, {"category": "Flex", "word": "flex-basis", "desc": "基準サイズ"}, {"category": "Flex", "word": "order", "desc": "並び順"}, {"category": "Grid", "word": "display:grid", "desc": "グリッドレイアウト有効化"}, {"category": "Grid", "word": "grid-template-columns", "desc": "列の定義"}, {"category": "Grid", "word": "grid-template-rows", "desc": "行の定義"}, {"category": "Grid", "word": "grid-template-areas", "desc": "領域の定義"}, {"category": "Grid", "word": "grid-column", "desc": "列の位置指定"}, {"category": "Grid", "word": "grid-row", "desc": "行の位置指定"}, {"category": "Grid", "word": "grid-area", "desc": "領域名指定"}, {"category": "Grid", "word": "grid-gap", "desc": "行と列の間隔"}, {"category": "Grid", "word": "justify-items", "desc": "セル内の配置（横軸）"}, {"category": "Grid", "word": "align-items", "desc": "セル内の配置（縦軸）"}, {"category": "Grid", "word": "place-items", "desc": "align-itemsとjustify-itemsのまとめ"}, {"category": "その他", "word": "cursor", "desc": "カーソルの形状"}, {"category": "その他", "word": "content", "desc": "疑似要素の内容"}, {"category": "その他", "word": "filter", "desc": "フィルター効果"}, {"category": "その他", "word": "resize", "desc": "リサイズ可否"}, {"category": "その他", "word": "pointer-events", "desc": "マウスイベント制御"}, {"category": "その他", "word": "will-change", "desc": "最適化のヒント"}]</script>
