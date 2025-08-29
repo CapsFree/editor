@@ -3,145 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTMLエディタ + 折りたたみ辞書 + プレビュー</title>
+<title>HTML/CSS/JSエディタ＋辞書＋プレビュー</title>
 <style>
-body { margin:0; font-family:sans-serif; display:flex; flex-direction:column; height:100vh; }
-#toolbar { padding:10px; background:#eee; display:flex; gap:10px; flex-wrap:wrap; }
-button { padding:5px 10px; }
-#container { flex:1; display:flex; flex-direction:column; transition:all 0.3s; min-height:0; }
-#editor { flex:1; padding:10px; font-family:monospace; font-size:16px; box-sizing:border-box; min-height:0; }
-#dictionary { flex:1; border-top:1px solid #ccc; overflow-y:auto; padding:10px; white-space: pre; font-family: monospace; min-height:0; }
-#dictionary .category { font-weight:bold; cursor:pointer; margin-top:10px; font-size:20; line-height:30px; }
-#dictionary .items { margin-left:10px; display:none; font-size:16; line-height:26px; } /* 初期は閉じる */
-#preview { width:100%; height:100vh; border:none; display:none; }
+body,html {
+  height:100%;
+  margin:0;
+  font-family:sans-serif;
+  display:flex;
+  flex-direction:column;
+}
+#menu {
+  background:#eee;
+  padding:5px;
+  display:flex;
+  gap:5px;
+  border-bottom:1px solid #ccc;
+}
+#container {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#editor {
+  flex:1;
+  resize:none;
+  font-family:monospace;
+  padding:5px;
+  width:100%;
+  height:100%;
+}
+#dictionary {
+  flex:1;
+  border-top:1px solid #ccc;
+  padding:5px;
+  overflow-y:auto;
+  max-height:40%;
+}
+@media (orientation: landscape) {
+  #container {
+    flex-direction:row;
+  }
+  #editor { flex:1; height:100%; }
+  #dictionary {
+    flex:1;
+    border-top:none;
+    border-left:1px solid #ccc;
+    max-height:none;
+    max-width:50%;
+    overflow-y:auto;
+  }
+}
+#preview {
+  flex:1;
+  border:none;
+  width:100%;
+  height:100%;
+}
+details summary {
+  cursor:pointer;
+  font-weight:bold;
+  margin-top:5px;
+}
 </style>
 </head>
 <body>
 
-<div id="toolbar">
+<div id="menu">
   <button onclick="showEditor()">エディタ</button>
   <button onclick="showPreview()">プレビュー</button>
-  <button onclick="downloadFile()">書き出し</button>
+  <button onclick="saveFile()">保存</button>
   <input type="file" id="fileInput" onchange="loadFile(event)">
 </div>
 
 <div id="container">
-  <textarea id="editor" placeholder="ここにHTMLを書いてください"></textarea>
+  <textarea id="editor"></textarea>
   <div id="dictionary"></div>
+  <iframe id="preview" style="display:none;"></iframe>
 </div>
 
-<iframe id="preview"></iframe>
+<!-- 辞書データ -->
+<script type="application/json" id="html-dic">
+[
+  {"category":"構造","word":"<!DOCTYPE html>","desc":"HTML文書の宣言"},
+  {"category":"構造","word":"<html>","desc":"HTML文書全体を囲むルート要素"},
+  {"category":"構造","word":"<head>","desc":"メタ情報やタイトルを含む要素"},
+  {"category":"構造","word":"<body>","desc":"本文全体を囲む要素"}
+]
+</script>
+
+<script type="application/json" id="css-dic">
+[
+  {"category":"基本","word":"color","desc":"文字色を指定"},
+  {"category":"基本","word":"background-color","desc":"背景色を指定"},
+  {"category":"ボックス","word":"margin","desc":"外側の余白を指定"},
+  {"category":"ボックス","word":"padding","desc":"内側の余白を指定"}
+]
+</script>
 
 <script>
 const editor = document.getElementById('editor');
-const preview = document.getElementById('preview');
-const container = document.getElementById('container');
 const dictionary = document.getElementById('dictionary');
-const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
 
-// 表示切替
-function showEditor() {
-  container.style.display = 'flex';
-  preview.style.display = 'none';
-  adjustLayout();
+// --- 辞書ロード ---
+function loadDictionaries(){
+  dictionary.innerHTML = '';
+  ['html-dic','css-dic','js-dic'].forEach(id=>{
+    const script = document.getElementById(id);
+    if(!script) return;
+    const data = JSON.parse(script.textContent);
+    const grouped = {};
+    data.forEach(item=>{
+      if(!grouped[item.category]) grouped[item.category]=[];
+      grouped[item.category].push(item);
+    });
+    for(const cat in grouped){
+      const details = document.createElement('details');
+      details.open = false; // 初期閉じる
+      const summary = document.createElement('summary');
+      summary.textContent = `${id.replace('-dic','').toUpperCase()} - ${cat}`;
+      details.appendChild(summary);
+      grouped[cat].forEach(item=>{
+        const div = document.createElement('div');
+        div.textContent = `${item.word} : ${item.desc}`;
+        details.appendChild(div);
+      });
+      dictionary.appendChild(details);
+    }
+  });
 }
 
-function showPreview() {
-  container.style.display = 'none';
-  preview.style.display = 'block';
+// --- プレビュー ---
+function showPreview(){
+  editor.style.display='none';
+  dictionary.style.display='none';
+  preview.style.display='block';
   const doc = preview.contentDocument || preview.contentWindow.document;
   doc.open();
   doc.write(editor.value);
   doc.close();
 }
 
-// ファイル読み込み
-function loadFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+// --- エディタ表示 ---
+function showEditor(){
+  preview.style.display='none';
+  editor.style.display='block';
+  dictionary.style.display='block';
+}
+
+// --- 保存 ---
+function saveFile(){
+  const blob = new Blob([editor.value],{type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  a.click();
+}
+
+// --- 読み込み ---
+function loadFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
   const reader = new FileReader();
-  reader.onload = e => editor.value = e.target.result;
+  reader.onload = evt => editor.value = evt.target.result;
   reader.readAsText(file);
 }
 
-// ファイル書き出し
-function downloadFile() {
-  const blob = new Blob([editor.value], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "index.html";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// 辞書読み込み（カテゴリ折りたたみ対応、初期閉じる）
-function loadDictionary() {
-  const types = ['html-dic','css-dic','js-dic'];
-  dictionary.innerHTML = '';
-  types.forEach(type=>{
-    const dataEl = document.getElementById(type);
-    if(dataEl && dataEl.textContent.trim()){
-      try {
-        const items = JSON.parse(dataEl.textContent);
-        const categories = {};
-        items.forEach(item => {
-          if(!categories[item.category]) categories[item.category] = [];
-          categories[item.category].push(item);
-        });
-        for(const cat in categories){
-          const categoryDiv = document.createElement('div');
-          categoryDiv.className = 'category';
-          categoryDiv.textContent = `${type.replace('-dic','').toUpperCase()} - ${cat}`;
-          
-          const itemsDiv = document.createElement('div');
-          itemsDiv.className = 'items';
-          categories[cat].forEach(item=>{
-            itemsDiv.textContent += item.word + " - " + item.desc + "\n";
-          });
-
-          // 初期は閉じた状態
-          itemsDiv.style.display = 'none';
-
-          categoryDiv.addEventListener('click', ()=>{
-            itemsDiv.style.display = (itemsDiv.style.display === 'none') ? 'block' : 'none';
-          });
-
-          dictionary.appendChild(categoryDiv);
-          dictionary.appendChild(itemsDiv);
-        }
-      } catch(e){ console.error('JSON error', type, e); }
-    }
-  });
-}
-
-// レイアウト調整（縦横）
-function adjustLayout(){
-  if(window.innerWidth > window.innerHeight){
-    // 横向き：左エディタ、右辞書
-    container.style.flexDirection = 'row';
-    editor.style.flex = '1';
-    dictionary.style.flex = '1';
-    dictionary.style.borderTop = 'none';
-    dictionary.style.borderLeft = '1px solid #ccc';
-  } else {
-    // 縦向き：上エディタ、下辞書
-    container.style.flexDirection = 'column';
-    editor.style.flex = '1';
-    dictionary.style.flex = '1';
-    dictionary.style.borderTop = '1px solid #ccc';
-    dictionary.style.borderLeft = 'none';
-  }
-}
-
-window.addEventListener('resize', adjustLayout);
-window.addEventListener('orientationchange', adjustLayout);
-window.onload = () => {
-  loadDictionary();
-  adjustLayout();
-};
+window.onload = loadDictionaries;
 </script>
-
 <script type="application/json" id="html-dic">[{"category": "構造", "word": "<!DOCTYPE html>", "desc": "HTML文書の宣言"}, {"category": "構造", "word": "<html>", "desc": "HTML文書全体を囲むルート要素"}, {"category": "構造", "word": "<head>", "desc": "メタ情報やタイトルを含む要素"}, {"category": "構造", "word": "<body>", "desc": "本文全体を囲む要素"}, {"category": "構造", "word": "<header>", "desc": "ページやセクションのヘッダー部分"}, {"category": "構造", "word": "<footer>", "desc": "ページやセクションのフッター部分"}, {"category": "構造", "word": "<main>", "desc": "主要なコンテンツ部分"}, {"category": "構造", "word": "<section>", "desc": "文書のセクション"}, {"category": "構造", "word": "<article>", "desc": "独立した記事やコンテンツ"}, {"category": "構造", "word": "<nav>", "desc": "ナビゲーションリンク群"}, {"category": "構造", "word": "<aside>", "desc": "補足的なコンテンツ"}, {"category": "構造", "word": "<div>", "desc": "汎用的なコンテナ"}, {"category": "構造", "word": "<span>", "desc": "汎用的なインライン要素"}, {"category": "テキスト", "word": "<h1>", "desc": "最上位の見出し"}, {"category": "テキスト", "word": "<h2>", "desc": "2番目の見出し"}, {"category": "テキスト", "word": "<h3>", "desc": "3番目の見出し"}, {"category": "テキスト", "word": "<h4>", "desc": "4番目の見出し"}, {"category": "テキスト", "word": "<h5>", "desc": "5番目の見出し"}, {"category": "テキスト", "word": "<h6>", "desc": "6番目の見出し"}, {"category": "テキスト", "word": "<p>", "desc": "段落"}, {"category": "テキスト", "word": "<br>", "desc": "改行"}, {"category": "テキスト", "word": "<hr>", "desc": "水平線"}, {"category": "テキスト", "word": "<strong>", "desc": "強調（重要）"}, {"category": "テキスト", "word": "<em>", "desc": "強調（強意）"}, {"category": "テキスト", "word": "<mark>", "desc": "マーカーで強調"}, {"category": "テキスト", "word": "<small>", "desc": "小さい文字"}, {"category": "テキスト", "word": "<b>", "desc": "太字"}, {"category": "テキスト", "word": "<i>", "desc": "斜体"}, {"category": "テキスト", "word": "<u>", "desc": "下線"}, {"category": "テキスト", "word": "<s>", "desc": "打ち消し線"}, {"category": "テキスト", "word": "<sup>", "desc": "上付き文字"}, {"category": "テキスト", "word": "<sub>", "desc": "下付き文字"}, {"category": "テキスト", "word": "<abbr>", "desc": "略語"}, {"category": "テキスト", "word": "<cite>", "desc": "引用元のタイトル"}, {"category": "テキスト", "word": "<q>", "desc": "短い引用"}, {"category": "テキスト", "word": "<blockquote>", "desc": "長い引用"}, {"category": "テキスト", "word": "<code>", "desc": "コード片"}, {"category": "テキスト", "word": "<pre>", "desc": "整形済みテキスト"}, {"category": "テキスト", "word": "<kbd>", "desc": "キーボード入力"}, {"category": "テキスト", "word": "<var>", "desc": "変数"}, {"category": "テキスト", "word": "<samp>", "desc": "出力サンプル"}, {"category": "リンク・埋め込み", "word": "<a>", "desc": "リンク"}, {"category": "リンク・埋め込み", "word": "<link>", "desc": "外部リソース参照"}, {"category": "リンク・埋め込み", "word": "<meta>", "desc": "メタ情報"}, {"category": "リンク・埋め込み", "word": "<base>", "desc": "基準URL指定"}, {"category": "リンク・埋め込み", "word": "<style>", "desc": "CSS記述"}, {"category": "リンク・埋め込み", "word": "<script>", "desc": "JavaScript記述"}, {"category": "リンク・埋め込み", "word": "<noscript>", "desc": "スクリプト無効時の代替"}, {"category": "リンク・埋め込み", "word": "<iframe>", "desc": "インラインフレーム"}, {"category": "リンク・埋め込み", "word": "<embed>", "desc": "外部アプリ埋め込み"}, {"category": "リンク・埋め込み", "word": "<object>", "desc": "外部リソース埋め込み"}, {"category": "リンク・埋め込み", "word": "<param>", "desc": "object用のパラメータ"}, {"category": "リスト", "word": "<ul>", "desc": "順序なしリスト"}, {"category": "リスト", "word": "<ol>", "desc": "順序付きリスト"}, {"category": "リスト", "word": "<li>", "desc": "リスト項目"}, {"category": "リスト", "word": "<dl>", "desc": "定義リスト"}, {"category": "リスト", "word": "<dt>", "desc": "定義語"}, {"category": "リスト", "word": "<dd>", "desc": "定義の説明"}, {"category": "テーブル", "word": "<table>", "desc": "表全体"}, {"category": "テーブル", "word": "<caption>", "desc": "表のタイトル"}, {"category": "テーブル", "word": "<tr>", "desc": "行"}, {"category": "テーブル", "word": "<th>", "desc": "見出しセル"}, {"category": "テーブル", "word": "<td>", "desc": "データセル"}, {"category": "テーブル", "word": "<thead>", "desc": "表のヘッダー部分"}, {"category": "テーブル", "word": "<tbody>", "desc": "表の本文部分"}, {"category": "テーブル", "word": "<tfoot>", "desc": "表のフッター部分"}, {"category": "テーブル", "word": "<colgroup>", "desc": "列のグループ"}, {"category": "テーブル", "word": "<col>", "desc": "列の属性指定"}, {"category": "フォーム", "word": "<form>", "desc": "フォーム全体"}, {"category": "フォーム", "word": "<input>", "desc": "入力フィールド"}, {"category": "フォーム", "word": "<textarea>", "desc": "複数行入力欄"}, {"category": "フォーム", "word": "<button>", "desc": "ボタン"}, {"category": "フォーム", "word": "<select>", "desc": "選択リスト"}, {"category": "フォーム", "word": "<option>", "desc": "選択肢"}, {"category": "フォーム", "word": "<optgroup>", "desc": "選択肢グループ"}, {"category": "フォーム", "word": "<label>", "desc": "ラベル"}, {"category": "フォーム", "word": "<fieldset>", "desc": "入力グループ"}, {"category": "フォーム", "word": "<legend>", "desc": "fieldsetの見出し"}, {"category": "フォーム", "word": "<datalist>", "desc": "入力候補リスト"}, {"category": "フォーム", "word": "<output>", "desc": "計算結果の出力"}, {"category": "フォーム", "word": "<progress>", "desc": "進行状況"}, {"category": "フォーム", "word": "<meter>", "desc": "測定値"}, {"category": "メディア", "word": "<img>", "desc": "画像"}, {"category": "メディア", "word": "<audio>", "desc": "音声"}, {"category": "メディア", "word": "<video>", "desc": "動画"}, {"category": "メディア", "word": "<source>", "desc": "メディアのソース"}, {"category": "メディア", "word": "<track>", "desc": "字幕やキャプション"}, {"category": "メディア", "word": "<canvas>", "desc": "描画領域"}, {"category": "メディア", "word": "<svg>", "desc": "SVGグラフィック"}, {"category": "メディア", "word": "<map>", "desc": "イメージマップ"}, {"category": "メディア", "word": "<area>", "desc": "イメージマップ領域"}, {"category": "メディア", "word": "<picture>", "desc": "レスポンシブ画像"}, {"category": "メディア", "word": "<figcaption>", "desc": "図のキャプション"}, {"category": "メディア", "word": "<figure>", "desc": "図や表のコンテナ"}]</script>
 <script type="application/json" id="css-dic">[{"category": "レイアウト", "word": "display", "desc": "要素の表示形式を指定"}, {"category": "レイアウト", "word": "position", "desc": "要素の配置方法を指定"}, {"category": "レイアウト", "word": "top", "desc": "上からの位置"}, {"category": "レイアウト", "word": "right", "desc": "右からの位置"}, {"category": "レイアウト", "word": "bottom", "desc": "下からの位置"}, {"category": "レイアウト", "word": "left", "desc": "左からの位置"}, {"category": "レイアウト", "word": "z-index", "desc": "重なり順"}, {"category": "レイアウト", "word": "float", "desc": "要素を左右に寄せる"}, {"category": "レイアウト", "word": "clear", "desc": "floatの解除"}, {"category": "レイアウト", "word": "overflow", "desc": "はみ出した内容の処理"}, {"category": "レイアウト", "word": "clip", "desc": "表示領域を切り取る"}, {"category": "レイアウト", "word": "visibility", "desc": "要素の表示/非表示"}, {"category": "レイアウト", "word": "opacity", "desc": "透明度"}, {"category": "寸法", "word": "width", "desc": "幅"}, {"category": "寸法", "word": "min-width", "desc": "最小幅"}, {"category": "寸法", "word": "max-width", "desc": "最大幅"}, {"category": "寸法", "word": "height", "desc": "高さ"}, {"category": "寸法", "word": "min-height", "desc": "最小高さ"}, {"category": "寸法", "word": "max-height", "desc": "最大高さ"}, {"category": "余白", "word": "margin", "desc": "外側の余白"}, {"category": "余白", "word": "margin-top", "desc": "上の余白"}, {"category": "余白", "word": "margin-right", "desc": "右の余白"}, {"category": "余白", "word": "margin-bottom", "desc": "下の余白"}, {"category": "余白", "word": "margin-left", "desc": "左の余白"}, {"category": "余白", "word": "padding", "desc": "内側の余白"}, {"category": "余白", "word": "padding-top", "desc": "上の内側余白"}, {"category": "余白", "word": "padding-right", "desc": "右の内側余白"}, {"category": "余白", "word": "padding-bottom", "desc": "下の内側余白"}, {"category": "余白", "word": "padding-left", "desc": "左の内側余白"}, {"category": "枠線", "word": "border", "desc": "枠線一括指定"}, {"category": "枠線", "word": "border-width", "desc": "枠線の太さ"}, {"category": "枠線", "word": "border-style", "desc": "枠線のスタイル"}, {"category": "枠線", "word": "border-color", "desc": "枠線の色"}, {"category": "枠線", "word": "border-radius", "desc": "角丸"}, {"category": "枠線", "word": "border-top", "desc": "上の枠線"}, {"category": "枠線", "word": "border-right", "desc": "右の枠線"}, {"category": "枠線", "word": "border-bottom", "desc": "下の枠線"}, {"category": "枠線", "word": "border-left", "desc": "左の枠線"}, {"category": "枠線", "word": "outline", "desc": "アウトライン"}, {"category": "枠線", "word": "box-shadow", "desc": "影の効果"}, {"category": "背景", "word": "background", "desc": "背景一括指定"}, {"category": "背景", "word": "background-color", "desc": "背景色"}, {"category": "背景", "word": "background-image", "desc": "背景画像"}, {"category": "背景", "word": "background-size", "desc": "背景画像のサイズ"}, {"category": "背景", "word": "background-position", "desc": "背景画像の位置"}, {"category": "背景", "word": "background-repeat", "desc": "背景画像の繰り返し"}, {"category": "背景", "word": "background-clip", "desc": "背景描画領域"}, {"category": "背景", "word": "background-origin", "desc": "背景の基準位置"}, {"category": "背景", "word": "background-attachment", "desc": "背景画像のスクロール制御"}, {"category": "文字", "word": "color", "desc": "文字色"}, {"category": "文字", "word": "font", "desc": "フォント一括指定"}, {"category": "文字", "word": "font-family", "desc": "フォント種類"}, {"category": "文字", "word": "font-size", "desc": "文字サイズ"}, {"category": "文字", "word": "font-style", "desc": "斜体指定"}, {"category": "文字", "word": "font-weight", "desc": "太字指定"}, {"category": "文字", "word": "line-height", "desc": "行の高さ"}, {"category": "文字", "word": "letter-spacing", "desc": "文字間隔"}, {"category": "文字", "word": "word-spacing", "desc": "単語間隔"}, {"category": "文字", "word": "text-align", "desc": "文字揃え"}, {"category": "文字", "word": "text-decoration", "desc": "下線や取り消し線"}, {"category": "文字", "word": "text-transform", "desc": "大文字・小文字変換"}, {"category": "文字", "word": "white-space", "desc": "空白や改行の扱い"}, {"category": "文字", "word": "vertical-align", "desc": "縦方向の配置"}, {"category": "文字", "word": "text-shadow", "desc": "文字の影"}, {"category": "文字", "word": "direction", "desc": "文字の書字方向"}, {"category": "文字", "word": "unicode-bidi", "desc": "双方向テキスト制御"}, {"category": "リスト", "word": "list-style", "desc": "リストマーカー一括指定"}, {"category": "リスト", "word": "list-style-type", "desc": "リストマーカー種類"}, {"category": "リスト", "word": "list-style-position", "desc": "マーカー位置"}, {"category": "リスト", "word": "list-style-image", "desc": "マーカー画像"}, {"category": "表", "word": "border-collapse", "desc": "セルの枠線結合"}, {"category": "表", "word": "border-spacing", "desc": "セルの間隔"}, {"category": "表", "word": "caption-side", "desc": "キャプション位置"}, {"category": "表", "word": "empty-cells", "desc": "空セルの表示"}, {"category": "アニメーション", "word": "transition", "desc": "変化のアニメーション"}, {"category": "アニメーション", "word": "transition-property", "desc": "アニメ対象プロパティ"}, {"category": "アニメーション", "word": "transition-duration", "desc": "変化の時間"}, {"category": "アニメーション", "word": "transition-timing-function", "desc": "加速・減速"}, {"category": "アニメーション", "word": "transition-delay", "desc": "開始遅延"}, {"category": "アニメーション", "word": "animation", "desc": "アニメーション一括指定"}, {"category": "アニメーション", "word": "animation-name", "desc": "アニメーション名"}, {"category": "アニメーション", "word": "animation-duration", "desc": "アニメ時間"}, {"category": "アニメーション", "word": "animation-delay", "desc": "アニメ開始遅延"}, {"category": "アニメーション", "word": "animation-iteration-count", "desc": "繰り返し回数"}, {"category": "アニメーション", "word": "animation-direction", "desc": "方向（逆再生など）"}, {"category": "アニメーション", "word": "animation-fill-mode", "desc": "終了後の状態"}, {"category": "Flex", "word": "display:flex", "desc": "Flexboxを有効化"}, {"category": "Flex", "word": "flex-direction", "desc": "並び方向"}, {"category": "Flex", "word": "flex-wrap", "desc": "折り返し"}, {"category": "Flex", "word": "flex-flow", "desc": "directionとwrapをまとめて指定"}, {"category": "Flex", "word": "justify-content", "desc": "主軸方向の揃え"}, {"category": "Flex", "word": "align-items", "desc": "交差軸の揃え"}, {"category": "Flex", "word": "align-content", "desc": "複数行の揃え"}, {"category": "Flex", "word": "flex-grow", "desc": "余白を伸ばす割合"}, {"category": "Flex", "word": "flex-shrink", "desc": "縮小の割合"}, {"category": "Flex", "word": "flex-basis", "desc": "基準サイズ"}, {"category": "Flex", "word": "order", "desc": "並び順"}, {"category": "Grid", "word": "display:grid", "desc": "グリッドレイアウト有効化"}, {"category": "Grid", "word": "grid-template-columns", "desc": "列の定義"}, {"category": "Grid", "word": "grid-template-rows", "desc": "行の定義"}, {"category": "Grid", "word": "grid-template-areas", "desc": "領域の定義"}, {"category": "Grid", "word": "grid-column", "desc": "列の位置指定"}, {"category": "Grid", "word": "grid-row", "desc": "行の位置指定"}, {"category": "Grid", "word": "grid-area", "desc": "領域名指定"}, {"category": "Grid", "word": "grid-gap", "desc": "行と列の間隔"}, {"category": "Grid", "word": "justify-items", "desc": "セル内の配置（横軸）"}, {"category": "Grid", "word": "align-items", "desc": "セル内の配置（縦軸）"}, {"category": "Grid", "word": "place-items", "desc": "align-itemsとjustify-itemsのまとめ"}, {"category": "その他", "word": "cursor", "desc": "カーソルの形状"}, {"category": "その他", "word": "content", "desc": "疑似要素の内容"}, {"category": "その他", "word": "filter", "desc": "フィルター効果"}, {"category": "その他", "word": "resize", "desc": "リサイズ可否"}, {"category": "その他", "word": "pointer-events", "desc": "マウスイベント制御"}, {"category": "その他", "word": "will-change", "desc": "最適化のヒント"}]</script>
 <script type="application/json" id="js-dic">[{"category": "基本構文", "word": "// コメント", "desc": "1行コメント"}, {"category": "基本構文", "word": "/* ... */", "desc": "複数行コメント"}, {"category": "基本構文", "word": "let", "desc": "変数宣言（再代入可）"}, {"category": "基本構文", "word": "const", "desc": "定数宣言（再代入不可）"}, {"category": "基本構文", "word": "var", "desc": "古い変数宣言"}, {"category": "基本構文", "word": "if (...) {...}", "desc": "条件分岐"}, {"category": "基本構文", "word": "else if", "desc": "追加条件"}, {"category": "基本構文", "word": "else", "desc": "それ以外の場合"}, {"category": "基本構文", "word": "switch", "desc": "複数条件分岐"}, {"category": "基本構文", "word": "case", "desc": "switchの条件"}, {"category": "基本構文", "word": "default", "desc": "switchのデフォルト"}, {"category": "ループ", "word": "for", "desc": "通常ループ"}, {"category": "ループ", "word": "for...of", "desc": "配列の反復"}, {"category": "ループ", "word": "for...in", "desc": "オブジェクトの列挙"}, {"category": "ループ", "word": "while", "desc": "条件付きループ"}, {"category": "ループ", "word": "do...while", "desc": "最低1回実行するループ"}, {"category": "ループ", "word": "break", "desc": "ループを抜ける"}, {"category": "ループ", "word": "continue", "desc": "次の反復へスキップ"}, {"category": "関数", "word": "function name(){}", "desc": "関数宣言"}, {"category": "関数", "word": "const f = function(){}", "desc": "関数式"}, {"category": "関数", "word": "()=>", "desc": "アロー関数"}, {"category": "関数", "word": "return", "desc": "戻り値"}, {"category": "関数", "word": "arguments", "desc": "関数内の引数リスト"}, {"category": "関数", "word": "rest ...args", "desc": "可変長引数"}, {"category": "関数", "word": "default = 値", "desc": "デフォルト引数"}, {"category": "配列", "word": "[ ]", "desc": "配列リテラル"}, {"category": "配列", "word": "Array()", "desc": "配列生成"}, {"category": "配列", "word": "push()", "desc": "末尾に追加"}, {"category": "配列", "word": "pop()", "desc": "末尾を削除"}, {"category": "配列", "word": "shift()", "desc": "先頭を削除"}, {"category": "配列", "word": "unshift()", "desc": "先頭に追加"}, {"category": "配列", "word": "slice()", "desc": "部分配列を取得"}, {"category": "配列", "word": "splice()", "desc": "要素を追加・削除"}, {"category": "配列", "word": "concat()", "desc": "結合"}, {"category": "配列", "word": "join()", "desc": "文字列に結合"}, {"category": "配列", "word": "map()", "desc": "配列を変換"}, {"category": "配列", "word": "forEach()", "desc": "配列を順に処理"}, {"category": "配列", "word": "filter()", "desc": "条件で抽出"}, {"category": "配列", "word": "find()", "desc": "最初に一致する要素"}, {"category": "配列", "word": "findIndex()", "desc": "一致要素のインデックス"}, {"category": "配列", "word": "reduce()", "desc": "畳み込み"}, {"category": "配列", "word": "includes()", "desc": "要素を含むか判定"}, {"category": "配列", "word": "indexOf()", "desc": "最初の位置"}, {"category": "配列", "word": "lastIndexOf()", "desc": "最後の位置"}, {"category": "配列", "word": "sort()", "desc": "並べ替え"}, {"category": "配列", "word": "reverse()", "desc": "逆順"}, {"category": "配列", "word": "flat()", "desc": "多次元配列を平坦化"}, {"category": "オブジェクト", "word": "{ key: value }", "desc": "オブジェクトリテラル"}, {"category": "オブジェクト", "word": "Object.keys()", "desc": "キー一覧"}, {"category": "オブジェクト", "word": "Object.values()", "desc": "値一覧"}, {"category": "オブジェクト", "word": "Object.entries()", "desc": "キーと値の配列"}, {"category": "オブジェクト", "word": "Object.assign()", "desc": "オブジェクトのコピー"}, {"category": "オブジェクト", "word": "delete obj.key", "desc": "プロパティ削除"}, {"category": "オブジェクト", "word": "in", "desc": "プロパティ存在確認"}, {"category": "オブジェクト", "word": "hasOwnProperty()", "desc": "直接のプロパティ判定"}, {"category": "オブジェクト", "word": "JSON.stringify()", "desc": "オブジェクト→JSON文字列"}, {"category": "オブジェクト", "word": "JSON.parse()", "desc": "JSON文字列→オブジェクト"}, {"category": "DOM操作", "word": "document.getElementById()", "desc": "idで要素取得"}, {"category": "DOM操作", "word": "document.querySelector()", "desc": "CSSセレクタで取得"}, {"category": "DOM操作", "word": "document.querySelectorAll()", "desc": "複数取得"}, {"category": "DOM操作", "word": "element.innerHTML", "desc": "HTMLを取得/設定"}, {"category": "DOM操作", "word": "element.textContent", "desc": "テキストを取得/設定"}, {"category": "DOM操作", "word": "element.setAttribute()", "desc": "属性を設定"}, {"category": "DOM操作", "word": "element.getAttribute()", "desc": "属性を取得"}, {"category": "DOM操作", "word": "element.style", "desc": "スタイル操作"}, {"category": "DOM操作", "word": "document.createElement()", "desc": "要素作成"}, {"category": "DOM操作", "word": "parent.appendChild()", "desc": "子要素を追加"}, {"category": "DOM操作", "word": "parent.removeChild()", "desc": "子要素を削除"}, {"category": "DOM操作", "word": "element.classList.add()", "desc": "クラス追加"}, {"category": "DOM操作", "word": "element.classList.remove()", "desc": "クラス削除"}, {"category": "DOM操作", "word": "element.classList.toggle()", "desc": "クラス切替"}, {"category": "イベント", "word": "addEventListener()", "desc": "イベントリスナー登録"}, {"category": "イベント", "word": "removeEventListener()", "desc": "リスナー解除"}, {"category": "イベント", "word": "onclick", "desc": "クリックイベント"}, {"category": "イベント", "word": "onchange", "desc": "変更イベント"}, {"category": "イベント", "word": "oninput", "desc": "入力イベント"}, {"category": "イベント", "word": "onload", "desc": "読み込み完了"}, {"category": "イベント", "word": "onsubmit", "desc": "フォーム送信"}, {"category": "イベント", "word": "keydown", "desc": "キー押下"}, {"category": "イベント", "word": "keyup", "desc": "キー離し"}, {"category": "イベント", "word": "mousemove", "desc": "マウス移動"}, {"category": "イベント", "word": "touchstart", "desc": "タッチ開始"}, {"category": "イベント", "word": "touchend", "desc": "タッチ終了"}, {"category": "タイマー", "word": "setTimeout()", "desc": "一定時間後に実行"}, {"category": "タイマー", "word": "clearTimeout()", "desc": "setTimeoutを解除"}, {"category": "タイマー", "word": "setInterval()", "desc": "一定間隔で実行"}, {"category": "タイマー", "word": "clearInterval()", "desc": "setIntervalを解除"}, {"category": "Math", "word": "Math.random()", "desc": "0以上1未満の乱数"}, {"category": "Math", "word": "Math.floor()", "desc": "小数点切り捨て"}, {"category": "Math", "word": "Math.ceil()", "desc": "小数点切り上げ"}, {"category": "Math", "word": "Math.round()", "desc": "四捨五入"}, {"category": "Math", "word": "Math.max()", "desc": "最大値"}, {"category": "Math", "word": "Math.min()", "desc": "最小値"}, {"category": "Math", "word": "Math.pow()", "desc": "べき乗"}, {"category": "Math", "word": "Math.sqrt()", "desc": "平方根"}, {"category": "Math", "word": "Math.abs()", "desc": "絶対値"}, {"category": "Math", "word": "Math.PI", "desc": "円周率"}, {"category": "日付", "word": "Date()", "desc": "現在日時"}, {"category": "日付", "word": "Date.now()", "desc": "現在時刻(ミリ秒)"}, {"category": "日付", "word": "getFullYear()", "desc": "年を取得"}, {"category": "日付", "word": "getMonth()", "desc": "月を取得"}, {"category": "日付", "word": "getDate()", "desc": "日を取得"}, {"category": "日付", "word": "getDay()", "desc": "曜日を取得"}, {"category": "日付", "word": "getHours()", "desc": "時間を取得"}, {"category": "日付", "word": "getMinutes()", "desc": "分を取得"}, {"category": "日付", "word": "getSeconds()", "desc": "秒を取得"}, {"category": "Promise/非同期", "word": "Promise", "desc": "非同期処理を表すオブジェクト"}, {"category": "Promise/非同期", "word": "then()", "desc": "成功時処理"}, {"category": "Promise/非同期", "word": "catch()", "desc": "失敗時処理"}, {"category": "Promise/非同期", "word": "finally()", "desc": "終了時処理"}, {"category": "Promise/非同期", "word": "async", "desc": "非同期関数宣言"}, {"category": "Promise/非同期", "word": "await", "desc": "Promiseの完了待ち"}, {"category": "Promise/非同期", "word": "fetch()", "desc": "HTTPリクエスト"}, {"category": "クラス", "word": "class", "desc": "クラス定義"}, {"category": "クラス", "word": "constructor", "desc": "初期化メソッド"}, {"category": "クラス", "word": "extends", "desc": "継承"}, {"category": "クラス", "word": "super", "desc": "親クラス呼び出し"}, {"category": "クラス", "word": "static", "desc": "静的メソッド"}, {"category": "クラス", "word": "new", "desc": "インスタンス生成"}]</script>
